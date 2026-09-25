@@ -10,6 +10,8 @@ import { UPLOAD_MAX_BYTES, UPLOAD_MIME } from '../../shared/constants.js';
 export const ENTITIES = {
   vehicle: { table: 'vehicles', module: 'veiculos', label: 'plate' },
   driver: { table: 'drivers', module: 'motoristas', label: 'full_name' },
+  fueling: { table: 'fuelings', module: 'abastecimentos', label: 'station' },
+  fuel_order: { table: 'fuel_orders', module: 'ordens_abastecimento', label: 'number' },
 };
 
 const CATEGORIES = ['foto', 'documento', 'comprovante', 'nota_fiscal', 'outros'];

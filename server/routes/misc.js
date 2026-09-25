@@ -2,7 +2,8 @@ import { badRequest } from '../http.js';
 import { can, requirePerm } from '../permissions.js';
 import { audit, diff } from '../audit.js';
 import { validate } from '../validate.js';
-import { DEFAULT_SETTINGS, TOWED_TYPES } from '../../shared/constants.js';
+import { DEFAULT_SETTINGS, TOWED_TYPES, CONSUMPTION_DEVIATION } from '../../shared/constants.js';
+import { AVG_SQL } from '../fuel.js';
 
 async function getSettings(db) {
   const { rows } = await db.query('select key, value from settings');
@@ -71,6 +72,45 @@ export async function computeAlerts(db, user) {
     }
   }
 
+  if (can(user, 'ordens_abastecimento', 'ver')) {
+    const { rows } = await db.query(
+      `select o.id, o.number, v.plate, (current_date - o.order_date) as days from fuel_orders o join vehicles v on v.id = o.vehicle_id
+        where o.status = 'pendente' and o.order_date < current_date - 3 order by o.order_date`,
+    );
+    for (const o of rows) {
+      alerts.push({
+        level: 'info',
+        kind: 'ordem',
+        title: `Ordem de abastecimento nº ${o.number} (${o.plate}) pendente há ${o.days} dias`,
+        link: `/abastecimentos/ordens/${o.id}`,
+      });
+    }
+  }
+
+  if (can(user, 'abastecimentos', 'ver')) {
+    // Último consumo de cada veículo muito abaixo da média dele (possível vazamento, desvio ou erro de lançamento)
+    const { rows } = await db.query(
+      `with last as (
+         select distinct on (vehicle_id) id, vehicle_id, km_per_liter, fueled_at from fuelings
+          where status = 'ativo' and km_per_liter is not null and fueled_at > now() - interval '30 days'
+          order by vehicle_id, km desc),
+       avg as (
+         select vehicle_id, sum(calc_distance) / nullif(sum(calc_liters), 0) as kml from fuelings
+          where status = 'ativo' and calc_liters > 0 group by vehicle_id having count(*) >= 3)
+       select l.id, l.km_per_liter, a.kml, v.plate from last l join avg a using (vehicle_id) join vehicles v on v.id = l.vehicle_id
+        where l.km_per_liter < a.kml * (1 - $1::numeric)`,
+      [CONSUMPTION_DEVIATION],
+    );
+    for (const f of rows) {
+      alerts.push({
+        level: 'atencao',
+        kind: 'consumo',
+        title: `Veículo ${f.plate} — último consumo ${Number(f.km_per_liter).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km/L, abaixo da média (${Number(f.kml).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km/L)`,
+        link: `/abastecimentos/${f.id}`,
+      });
+    }
+  }
+
   const order = { urgente: 0, atencao: 1, info: 2 };
   alerts.sort((x, y) => order[x.level] - order[y.level]);
   return alerts;
@@ -110,6 +150,18 @@ export default function (r) {
          from drivers d left join driver_assignments a on a.driver_id = d.id and a.end_at is null`,
     );
     out.motoristas = ds[0];
+
+    if (can(ctx.user, 'abastecimentos', 'ver')) {
+      const { rows: fm } = await db.query(
+        `select ${AVG_SQL} from fuelings where status = 'ativo'
+            and fueled_at >= date_trunc('month', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo'`,
+      );
+      out.combustivel_mes = fm[0];
+    }
+    if (can(ctx.user, 'ordens_abastecimento', 'ver')) {
+      const { rows: po } = await db.query(`select count(*)::int as n from fuel_orders where status = 'pendente'`);
+      out.ordens_pendentes = po[0].n;
+    }
 
     const alerts = await computeAlerts(db, ctx.user);
     out.alerts = alerts;
@@ -169,6 +221,19 @@ export default function (r) {
       );
       for (const d of rows) {
         results.push({ kind: 'motorista', id: d.id, title: d.full_name, subtitle: `CPF ${d.cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')}`, link: `/motoristas/${d.id}` });
+      }
+    }
+    if (can(ctx.user, 'ordens_abastecimento', 'ver')) {
+      const num = q.replace(/^n[ºo°]?\s*/i, '').replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+      if (num && num.length <= 12) {
+        const { rows } = await ctx.db.query(
+          `select o.id, o.number, o.status, v.plate from fuel_orders o join vehicles v on v.id = o.vehicle_id
+            where o.number::text like $1 order by o.number desc limit 5`,
+          [`${num}%`],
+        );
+        for (const o of rows) {
+          results.push({ kind: 'ordem abast.', id: o.id, title: `Ordem nº ${o.number}`, subtitle: `${o.plate} · ${o.status}`, link: `/abastecimentos/ordens/${o.id}` });
+        }
       }
     }
     return { results };

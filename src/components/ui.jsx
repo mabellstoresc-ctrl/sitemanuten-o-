@@ -324,7 +324,7 @@ export function Dl({ items }) {
  * Tabela que vira lista de cartões no celular.
  * columns: [{ key, label, render?, className?, sort?: (row)=>valor, mobile?: false | 'title' }]
  */
-export function DataTable({ columns, rows, onRowClick, rowKey = 'id', empty, footer, initialSort }) {
+export function DataTable({ columns, rows, onRowClick, rowKey = 'id', empty, footer, initialSort, dense }) {
   const [sort, setSort] = useState(initialSort || null);
   let data = rows || [];
   if (sort) {
@@ -344,7 +344,7 @@ export function DataTable({ columns, rows, onRowClick, rowKey = 'id', empty, foo
   const titleCol = columns.find((c) => c.mobile === 'title') || columns[0];
   return (
     <div className="table-wrap responsive">
-      <table className="t">
+      <table className={`t ${dense ? 'dense' : ''}`}>
         <thead>
           <tr>
             {columns.map((c) => (

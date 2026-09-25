@@ -10,6 +10,7 @@ import vehicleRoutes from './routes/vehicles.js';
 import driverRoutes from './routes/drivers.js';
 import fileRoutes from './routes/files.js';
 import miscRoutes from './routes/misc.js';
+import fuelRoutes from './routes/fuel.js';
 
 // ---------- Roteador ----------
 const routes = [];
@@ -34,7 +35,7 @@ const r = {
   del: (p, h, o) => add('DELETE', p, h, o),
 };
 
-for (const register of [authRoutes, userRoutes, vehicleRoutes, driverRoutes, fileRoutes, miscRoutes]) register(r);
+for (const register of [authRoutes, userRoutes, fuelRoutes, vehicleRoutes, driverRoutes, fileRoutes, miscRoutes]) register(r);
 
 function match(method, path) {
   let pathMatched = false;
@@ -202,5 +203,6 @@ function duplicateMessage(err) {
   if (c.includes('open_vehicle')) return 'Este veículo já possui um motorista vinculado.';
   if (c.includes('open_driver')) return 'Este motorista já está vinculado a outro veículo.';
   if (c.includes('open_trailer')) return 'Este implemento já está engatado em outro veículo.';
+  if (c.includes('fuelings_order')) return 'Esta ordem de abastecimento já foi utilizada em outro abastecimento.';
   return 'Registro duplicado.';
 }

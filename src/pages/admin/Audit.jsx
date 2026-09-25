@@ -7,15 +7,23 @@ import { useFetch, Loading, ErrorBox, DataTable, Field, Select, useToast } from 
 import { PageHead, Guard } from '../../components/common.jsx';
 import { fmtDateTime, fmtCpf } from '../../lib/format.js';
 import { FIELD_LABELS, ACTION_LABELS, ENTITY_LABELS } from '../../../shared/labels.js';
-import { MODULES, ACTIONS, VEHICLE_STATUS, DRIVER_STATUS, VEHICLE_TYPES, FUEL_TYPES } from '../../../shared/constants.js';
+import { MODULES, ACTIONS, VEHICLE_STATUS, DRIVER_STATUS, VEHICLE_TYPES, FUEL_TYPES, FUELING_TYPES, FUEL_ORDER_STATUS, FUELING_STATUS } from '../../../shared/constants.js';
 
-const ENUMS = { status: [...VEHICLE_STATUS, ...DRIVER_STATUS], type: [...VEHICLE_TYPES], fuel_type: FUEL_TYPES };
+const ENUMS = {
+  status: [...VEHICLE_STATUS, ...DRIVER_STATUS, ...FUEL_ORDER_STATUS, ...FUELING_STATUS],
+  type: [...VEHICLE_TYPES],
+  fuel_type: [...FUEL_TYPES, ...FUELING_TYPES],
+};
+const MONEY = ['total', 'price_per_liter', 'max_amount'];
 const actionShort = Object.fromEntries(ACTIONS.map((a) => [a.key, a.label.toLowerCase()]));
 
 function fmtValue(campo, v) {
   if (v === null || v === undefined || v === '') return '—';
   if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
   if (campo === 'cpf') return fmtCpf(v);
+  if (MONEY.includes(campo)) return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: campo === 'price_per_liter' ? 4 : 2 });
+  if (campo === 'km') return `${Number(v).toLocaleString('pt-BR')} km`;
+  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) return fmtDateTime(v);
   if (ENUMS[campo]) return ENUMS[campo].find((e) => e.key === v)?.label || String(v);
   if (campo === 'current_km' || campo.endsWith('_km')) return `${Number(v).toLocaleString('pt-BR')}${campo === 'current_km' ? ' km' : ''}`;
   if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v.split('-').reverse().join('/');
@@ -64,7 +72,17 @@ export function ChangeList({ changes }) {
 
 function entityLink(e) {
   if (!e.entity_id) return e.entity_label || '—';
-  const map = { veiculo: '/veiculos/', vehicle: '/veiculos/', motorista: '/motoristas/', driver: '/motoristas/', usuario: '/admin/usuarios/' };
+  const map = {
+    veiculo: '/veiculos/',
+    vehicle: '/veiculos/',
+    motorista: '/motoristas/',
+    driver: '/motoristas/',
+    usuario: '/admin/usuarios/',
+    abastecimento: '/abastecimentos/',
+    fueling: '/abastecimentos/',
+    ordem_abastecimento: '/abastecimentos/ordens/',
+    fuel_order: '/abastecimentos/ordens/',
+  };
   const base = map[e.entity];
   const label = e.entity_label || e.entity_id.slice(0, 8);
   return base && e.action !== 'excluir' ? <Link to={base + e.entity_id}>{label}</Link> : label;

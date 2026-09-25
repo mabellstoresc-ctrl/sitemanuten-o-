@@ -11,6 +11,7 @@ import { fmtCpf, fmtDate, fmtDateTime, fmtKm, todayISO } from '../../lib/format.
 import { DRIVER_STATUS, OCCURRENCE_TYPES, labelOf } from '../../../shared/constants.js';
 import { ACTION_LABELS } from '../../../shared/labels.js';
 import { ChangeList } from '../admin/Audit.jsx';
+import { DriverFuelTab } from '../fuel/VehicleFuel.jsx';
 
 function StatusModal({ driver, onClose, onSaved }) {
   const { can } = useAuth();
@@ -297,10 +298,10 @@ export default function DriverDetail() {
           { key: 'geral', label: 'Visão geral' },
           { key: 'veiculos', label: 'Veículos utilizados' },
           { key: 'ocorrencias', label: 'Ocorrências' },
-          { key: 'abastecimentos', label: 'Abastecimentos', soon: 2 },
+          can('abastecimentos') && { key: 'abastecimentos', label: 'Abastecimentos' },
           { key: 'documentos', label: 'Documentos' },
           { key: 'historico', label: 'Histórico' },
-        ]}
+        ].filter(Boolean)}
         active={tab}
         onChange={(k) => setParams({ aba: k }, { replace: true })}
       />
@@ -364,12 +365,7 @@ export default function DriverDetail() {
       )}
       {tab === 'veiculos' && <VehiclesTab id={d.id} />}
       {tab === 'ocorrencias' && <OccurrencesTab driver={d} canEdit={canEdit} />}
-      {tab === 'abastecimentos' && (
-        <div className="card soon-box">
-          <h2>Disponível na fase 2</h2>
-          <p>Abastecimentos realizados por este motorista.</p>
-        </div>
-      )}
+      {tab === 'abastecimentos' && <DriverFuelTab driverId={d.id} />}
       {tab === 'documentos' && <Attachments entity="driver" entityId={d.id} canEdit={canEdit} />}
       {tab === 'historico' && <AuditTab id={d.id} />}
 

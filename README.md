@@ -79,11 +79,30 @@ Os outros usuários que esquecerem a senha devem falar com o administrador, que 
 - Uploads: o tipo real do arquivo é conferido pelo conteúdo (JPG, PNG, WEBP ou PDF), com limite de 4 MB. Fotos do celular são reduzidas antes do envio. Os arquivos ficam em bucket privado, acessível só pela API.
 - Auditoria de todas as alterações importantes, com valor anterior e novo. Exclusões exigem motivo.
 
+## Abastecimentos (fase 2)
+
+- **Ordens de abastecimento (302):** número sequencial, veículo, motorista, posto autorizado e limites de litros e/ou valor. A ordem pode ser **impressa** para o motorista levar ao posto. Situações: Pendente, Utilizada e Cancelada.
+- **Novo abastecimento (301):** já preenche o motorista atual do veículo e calcula o valor total (litros × preço). Aceita foto ou PDF do comprovante e pode ser vinculado a uma ordem; a ordem passa a "Utilizada" e os limites são conferidos.
+- **Média km/L pelo método do tanque cheio:** KM rodados desde o último tanque cheio ÷ litros abastecidos nesse intervalo. Abastecimentos parciais somam litros para o próximo tanque cheio. Exemplo: 350.000 → 350.800 km com 250 L = **3,2 km/L**. O ARLA 32 entra no custo, mas não na média.
+- **Recálculo automático:** incluir, editar ou cancelar qualquer abastecimento (inclusive lançado com atraso) recalcula todas as médias do veículo.
+- **Verificações antes de salvar:**
+  - KM incoerente com a linha do tempo;
+  - litros acima do tanque;
+  - lançamento em duplicidade;
+  - ordem já usada ou acima do limite;
+  - valor total que não confere;
+  - média fora do normal (sinal de KM ou litros digitados errado).
+- **Histórico (303):** filtros e totais, destaque para consumo 20% acima ou abaixo da média do veículo e exportação para Excel (CSV).
+- **Médias (304):** comparativo entre veículos, gráficos mensal, anual e por abastecimento, e comparação entre dois períodos.
+- **Alertas:** consumo abaixo do padrão e ordens pendentes há mais de 3 dias.
+
 ## Regras de quilometragem
 
 - O KM nunca diminui sem **confirmação do Administrador Principal** e motivo. A correção fica na auditoria.
 - Aumento muito grande (padrão: 5.000 km, configurável) pede confirmação, para evitar um zero a mais.
+- Toda leitura (manual ou de abastecimento) precisa ser coerente com a linha do tempo: não pode ser menor que uma leitura anterior nem maior que uma posterior.
 - Leituras antigas (lançadas com atraso) entram no histórico, mas não reduzem o KM atual.
+- Cancelar ou editar o abastecimento que definiu o KM atual faz o KM voltar. Por isso, só o Administrador Principal pode fazer isso.
 - Carretas e implementos acumulam KM pelo KM do cavalo enquanto estão engatados.
 
 ## Backup
@@ -136,8 +155,8 @@ tests/                      testes da API
 
 ## Fases
 
-1. **Base** (esta entrega): login, usuários, permissões, auditoria, histórico de acessos, veículos, implementos e engates, motoristas e ocorrências, regras de KM, anexos, painel, alertas de CNH, pesquisa global, configurações.
-2. Abastecimentos, ordens de abastecimento, médias de consumo e gráficos.
+1. **Base** (entregue): login, usuários, permissões, auditoria, histórico de acessos, veículos, implementos e engates, motoristas e ocorrências, regras de KM, anexos, painel, alertas de CNH, pesquisa global, configurações.
+2. **Abastecimentos** (entregue): ordens de abastecimento, médias de consumo e gráficos.
 3. Manutenções, ordens de serviço, troca de óleo, próximas manutenções, calendário e alertas.
 4. Pneus: cadastro, mapa de eixos, movimentações, recapagens e histórico.
 5. Checklists, documentos com vencimento, custos, relatórios PDF/Excel e backup pelo sistema.

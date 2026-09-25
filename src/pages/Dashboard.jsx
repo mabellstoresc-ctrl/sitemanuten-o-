@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
 import { useFetch, Loading, ErrorBox, Empty } from '../components/ui.jsx';
 import { PageHead } from '../components/common.jsx';
-import { fmtDateTime } from '../lib/format.js';
+import { fmtDateTime, fmtMoney, fmtNum } from '../lib/format.js';
 
 export function AlertList({ alerts, limit }) {
   if (!alerts?.length) return <Empty>Nenhum alerta no momento.</Empty>;
@@ -28,11 +28,11 @@ export function AlertList({ alerts, limit }) {
   );
 }
 
-function Kpi({ label, value, tone, to }) {
+function Kpi({ label, value, tone, to, small }) {
   const content = (
     <>
       <div className="label">{label}</div>
-      <div className="value">{value ?? '—'}</div>
+      <div className="value" style={small ? { fontSize: 20 } : undefined}>{value ?? '—'}</div>
     </>
   );
   return to ? (
@@ -70,6 +70,25 @@ export default function Dashboard() {
             <Kpi label="Em manutenção" value={f.em_manutencao} tone="warn" to="/veiculos?status=em_manutencao" />
             <Kpi label="Parados" value={f.parado} to="/veiculos?status=parado" />
             <Kpi label="Implementos / carretas" value={imp.total} to="/implementos" />
+          </div>
+        </>
+      )}
+
+      {(data.combustivel_mes || data.ordens_pendentes !== undefined) && (
+        <>
+          <div className="section-title">Combustível no mês</div>
+          <div className="kpis">
+            {data.combustivel_mes && (
+              <>
+                <Kpi label="Gasto com combustível" value={fmtMoney(data.combustivel_mes.total)} to="/abastecimentos" small />
+                <Kpi label="Média da frota (km/L)" value={data.combustivel_mes.km_per_liter ? fmtNum(data.combustivel_mes.km_per_liter, 2) : '—'} tone="info" to="/abastecimentos/medias" />
+                <Kpi label="Litros" value={fmtNum(data.combustivel_mes.liters, 0)} to="/abastecimentos" />
+                <Kpi label="Custo por km" value={data.combustivel_mes.cost_per_km ? fmtMoney(data.combustivel_mes.cost_per_km) : '—'} small />
+              </>
+            )}
+            {data.ordens_pendentes !== undefined && (
+              <Kpi label="Ordens de abastecimento pendentes" value={data.ordens_pendentes} tone={data.ordens_pendentes ? 'warn' : ''} to="/abastecimentos/ordens" />
+            )}
           </div>
         </>
       )}
@@ -133,8 +152,7 @@ export default function Dashboard() {
       </div>
 
       <div className="notice info" style={{ marginTop: 12 }}>
-        Indicadores de combustível, manutenção, troca de óleo, pneus, documentos e custos entram neste painel conforme cada módulo for liberado
-        (fases 2 a 5).
+        Indicadores de manutenção, troca de óleo, pneus, documentos e custos entram neste painel conforme cada módulo for liberado (fases 3 a 5).
       </div>
     </>
   );

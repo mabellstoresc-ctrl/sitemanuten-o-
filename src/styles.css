@@ -22,6 +22,8 @@
   --off: #475569;
   --off-bg: #e2e8f0;
   --radius: 6px;
+  --chart-1: #0074fc;
+  --chart-grid: #eef1f5;
   --side-w: 236px;
   --top-h: 52px;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -184,6 +186,8 @@ table.t th {
 }
 table.t td { padding: 6px 10px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
 table.t tbody tr:last-child td { border-bottom: 0; }
+table.t.dense td { white-space: nowrap; }
+table.t.dense td.wrap { white-space: normal; min-width: 160px; }
 table.t tbody tr:nth-child(even) td { background: #fbfcfd; }
 table.t tbody tr.click { cursor: pointer; }
 table.t tbody tr.click:hover td { background: var(--info-bg); }
@@ -344,3 +348,33 @@ a.alert-row:hover { background: #f8fafc; text-decoration: none; }
   .modal { border-radius: 12px 12px 0 0; max-height: 92vh; overflow-y: auto; }
   .kpi .value { font-size: 21px; }
 }
+
+/* ---------- Gráficos ---------- */
+.chart-tip {
+  position: absolute; transform: translateX(-50%); background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .12); padding: 6px 10px; font-size: 12.5px; pointer-events: none; white-space: nowrap; z-index: 5;
+}
+.compare { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.delta.up { color: var(--ok); }
+.delta.down { color: var(--danger); }
+@media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+
+/* ---------- Impressão (ordem de abastecimento) ---------- */
+.print-only { display: none; }
+@media print {
+  body { background: #fff; }
+  .sidebar, .topbar, .no-print, .toasts, .back, .page-head { display: none !important; }
+  .main { margin-left: 0 !important; }
+  .content { padding: 0 !important; max-width: none; }
+  .print-only { display: block !important; }
+  .card { border: 0; }
+}
+.print-order { max-width: 720px; margin: 0 auto; font-size: 14px; color: #000; }
+.print-order .head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 14px; }
+.print-order .head img { height: 44px; }
+.print-order .num { font-size: 26px; font-weight: 800; }
+.print-order table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+.print-order td { border: 1px solid #999; padding: 8px 10px; vertical-align: top; }
+.print-order td.k { width: 34%; font-weight: 700; background: #f2f2f2; }
+.print-order .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; text-align: center; }
+.print-order .sign div { border-top: 1px solid #000; padding-top: 6px; }

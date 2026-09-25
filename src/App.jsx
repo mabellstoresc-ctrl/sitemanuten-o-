@@ -18,6 +18,11 @@ import UserForm from './pages/admin/UserForm.jsx';
 import Audit from './pages/admin/Audit.jsx';
 import AccessLog from './pages/admin/AccessLog.jsx';
 import Settings from './pages/Settings.jsx';
+import FuelingForm from './pages/fuel/FuelingForm.jsx';
+import FuelingList from './pages/fuel/FuelingList.jsx';
+import FuelingDetail from './pages/fuel/FuelingDetail.jsx';
+import { FuelOrderList, FuelOrderDetail } from './pages/fuel/FuelOrders.jsx';
+import FuelAverages from './pages/fuel/FuelAverages.jsx';
 import { ALL_ITEMS } from './lib/nav.js';
 
 function Home() {
@@ -51,6 +56,14 @@ function AppRoutes() {
         <Route path="/motoristas/novo" element={<DriverForm />} />
         <Route path="/motoristas/:id" element={<Guard module="motoristas"><DriverDetail /></Guard>} />
         <Route path="/motoristas/:id/editar" element={<DriverForm />} />
+
+        <Route path="/abastecimentos" element={<FuelingList />} />
+        <Route path="/abastecimentos/novo" element={<FuelingForm />} />
+        <Route path="/abastecimentos/ordens" element={<FuelOrderList />} />
+        <Route path="/abastecimentos/ordens/:id" element={<FuelOrderDetail />} />
+        <Route path="/abastecimentos/medias" element={<FuelAverages />} />
+        <Route path="/abastecimentos/:id" element={<FuelingDetail />} />
+        <Route path="/abastecimentos/:id/editar" element={<FuelingForm />} />
 
         <Route path="/admin/usuarios" element={<Users />} />
         <Route path="/admin/usuarios/novo" element={<UserForm />} />

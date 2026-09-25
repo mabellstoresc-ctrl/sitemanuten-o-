@@ -45,10 +45,10 @@ export const MENU = [
   {
     group: 'Abastecimentos',
     items: [
-      { code: '301', label: 'Novo abastecimento', path: '/abastecimentos/novo', icon: Fuel, module: 'abastecimentos', phase: 2 },
-      { code: '302', label: 'Ordens de abastecimento', path: '/abastecimentos/ordens', module: 'ordens_abastecimento', phase: 2 },
-      { code: '303', label: 'Histórico', path: '/abastecimentos', module: 'abastecimentos', phase: 2 },
-      { code: '304', label: 'Médias', path: '/abastecimentos/medias', module: 'abastecimentos', phase: 2 },
+      { code: '301', label: 'Novo abastecimento', path: '/abastecimentos/novo', icon: Fuel, module: 'abastecimentos', action: 'cadastrar' },
+      { code: '302', label: 'Ordens de abastecimento', path: '/abastecimentos/ordens', module: 'ordens_abastecimento' },
+      { code: '303', label: 'Histórico', path: '/abastecimentos', module: 'abastecimentos' },
+      { code: '304', label: 'Médias', path: '/abastecimentos/medias', module: 'abastecimentos' },
     ],
   },
   {

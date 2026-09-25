@@ -43,6 +43,21 @@ export const FIELD_LABELS = {
   oleo_km: 'Aviso troca de óleo (km)',
   km_salto_maximo: 'Salto máximo de KM',
   nome: 'Nome da empresa',
+  fueled_at: 'Data/hora',
+  km: 'KM',
+  station: 'Posto',
+  city: 'Cidade',
+  state: 'UF',
+  liters: 'Litros',
+  price_per_liter: 'Valor por litro',
+  total: 'Valor total',
+  full_tank: 'Tanque cheio',
+  order_id: 'Ordem de abastecimento',
+  order_ref: 'Nº ordem externa',
+  driver_id: 'Motorista',
+  order_date: 'Data da ordem',
+  max_liters: 'Limite de litros',
+  max_amount: 'Limite de valor',
   cnpj: 'CNPJ',
 };
 
@@ -69,6 +84,7 @@ export const ACTION_LABELS = {
   registrar_ocorrencia: 'Ocorrência registrada',
   cancelar_ocorrencia: 'Ocorrência cancelada',
   exportar: 'Exportação',
+  cancelar: 'Cancelamento',
 };
 
 export const ACCESS_EVENTS = {
@@ -89,4 +105,8 @@ export const ENTITY_LABELS = {
   usuario: 'Usuário',
   configuracao: 'Configuração',
   auditoria: 'Auditoria',
+  abastecimento: 'Abastecimento',
+  fueling: 'Abastecimento',
+  ordem_abastecimento: 'Ordem de abastecimento',
+  fuel_order: 'Ordem de abastecimento',
 };

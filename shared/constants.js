@@ -138,3 +138,31 @@ export const UPLOAD_MIME = ['image/jpeg', 'image/png', 'image/webp', 'applicatio
 export function labelOf(list, key) {
   return list.find((i) => i.key === key)?.label ?? key ?? '';
 }
+
+// ----- Fase 2: abastecimentos -----
+// Combustíveis aceitos num abastecimento. ARLA 32 entra no custo, mas não na média km/L.
+export const FUELING_TYPES = [
+  { key: 'diesel_s10', label: 'Diesel S10' },
+  { key: 'diesel_s500', label: 'Diesel S500' },
+  { key: 'gasolina', label: 'Gasolina' },
+  { key: 'etanol', label: 'Etanol' },
+  { key: 'gnv', label: 'GNV' },
+  { key: 'arla32', label: 'ARLA 32' },
+];
+export const NON_CONSUMPTION_FUELS = ['arla32'];
+
+export const FUEL_ORDER_STATUS = [
+  { key: 'pendente', label: 'Pendente', tone: 'warn' },
+  { key: 'utilizada', label: 'Utilizada', tone: 'ok' },
+  { key: 'cancelada', label: 'Cancelada', tone: 'off' },
+];
+
+export const FUELING_STATUS = [
+  { key: 'ativo', label: 'Válido', tone: 'ok' },
+  { key: 'cancelado', label: 'Cancelado', tone: 'off' },
+];
+
+export const UF = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+
+// Consumo com desvio maior que este percentual da média do veículo é sinalizado
+export const CONSUMPTION_DEVIATION = 0.2;
