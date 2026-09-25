@@ -96,6 +96,20 @@ Os outros usuários que esquecerem a senha devem falar com o administrador, que 
 - **Médias (304):** comparativo entre veículos, gráficos mensal, anual e por abastecimento, e comparação entre dois períodos.
 - **Alertas:** consumo abaixo do padrão e ordens pendentes há mais de 3 dias.
 
+## Manutenção (fase 3)
+
+- **Ordens de serviço (401):**
+  - Ciclo: Aberta → Em análise → Aguardando peça → Em manutenção → Finalizada, ou Cancelada. Cada mudança fica registrada no andamento.
+  - Ao abrir a OS, o veículo pode ir para "Em manutenção"; ele volta ao status anterior quando a OS é finalizada ou cancelada.
+  - Peças são lançadas na própria OS.
+  - **Finalizar a OS gera automaticamente o registro de manutenção**, com peças, mão de obra, categorias e próxima manutenção. Não é preciso lançar duas vezes.
+  - A previsão de conclusão gera alerta de OS atrasada, e a OS pode ser impressa.
+- **Preventivas (402) e corretivas (403):** para serviços já realizados, com categorias, peças, mão de obra, total, nota fiscal, fotos e arquivos. A tela de preventivas mostra também as manutenções próximas e vencidas.
+- **Próxima manutenção:** toda manutenção pode ter próxima data e/ou próximo KM. Para cada veículo e categoria vale a manutenção mais recente. O sistema avisa quando está próxima (limites em Configurações) e quando venceu.
+- **Troca de óleo (404):** é uma manutenção com a categoria "Troca de óleo", com campos de marca, tipo, especificação, quantidade e filtros. A tela mostra por veículo: ÚLTIMA TROCA, PRÓXIMA TROCA, KM ATUAL e KM RESTANTES. O botão "+15 mil" usa o intervalo padrão definido em Configurações.
+- **Calendário (405):** filtros Hoje, Esta semana, Este mês, Atrasadas e Próximas. Manutenções por KM ganham uma **data estimada** pelo ritmo de rodagem do veículo nos últimos 90 dias.
+- **KM atualizado automaticamente:** o KM informado na OS ou na manutenção atualiza o veículo com as mesmas regras de coerência. Registros só com data comparam com os dias anteriores e posteriores.
+
 ## Regras de quilometragem
 
 - O KM nunca diminui sem **confirmação do Administrador Principal** e motivo. A correção fica na auditoria.
@@ -157,6 +171,6 @@ tests/                      testes da API
 
 1. **Base** (entregue): login, usuários, permissões, auditoria, histórico de acessos, veículos, implementos e engates, motoristas e ocorrências, regras de KM, anexos, painel, alertas de CNH, pesquisa global, configurações.
 2. **Abastecimentos** (entregue): ordens de abastecimento, médias de consumo e gráficos.
-3. Manutenções, ordens de serviço, troca de óleo, próximas manutenções, calendário e alertas.
+3. **Manutenção** (entregue): ordens de serviço, preventivas/corretivas, troca de óleo, próximas manutenções, calendário e alertas.
 4. Pneus: cadastro, mapa de eixos, movimentações, recapagens e histórico.
 5. Checklists, documentos com vencimento, custos, relatórios PDF/Excel e backup pelo sistema.

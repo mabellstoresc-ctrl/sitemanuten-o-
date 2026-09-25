@@ -320,7 +320,7 @@ test('dashboard, pesquisa e configurações', async () => {
 
   r = await joana.put('/api/settings/alertas', { cnh_dias: 60 });
   assert.equal(r.status, 403);
-  r = await admin.put('/api/settings/alertas', { cnh_dias: 60, documento_dias: 15, manutencao_dias: 7, manutencao_km: 1000, oleo_km: 1000, km_salto_maximo: 8000 });
+  r = await admin.put('/api/settings/alertas', { cnh_dias: 60, documento_dias: 15, manutencao_dias: 7, manutencao_km: 1000, oleo_km: 1000, km_salto_maximo: 8000, oleo_intervalo_km: 15000 });
   assert.equal(r.status, 200);
   r = await admin.get('/api/settings');
   assert.equal(r.data.settings.alertas.cnh_dias, 60);

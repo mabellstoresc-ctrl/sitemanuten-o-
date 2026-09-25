@@ -17,21 +17,35 @@ const fmtDate = (d) => new Date(d).toLocaleString('pt-BR', { timeZone: 'America/
  * - aumento acima do limite configurado pede confirmação (evita digitar um zero a mais).
  */
 export async function registerKm(c, ctx, vehicleId, km, opts = {}) {
-  const { source = 'manual', sourceId = null, readingAt = null, reason = null, confirmLower = false, confirmJump = false } = opts;
+  const { source = 'manual', sourceId = null, reason = null, confirmLower = false, confirmJump = false, dateOnly = null } = opts;
+  let { readingAt = null } = opts;
   if (!Number.isInteger(km) || km < 0 || km > 9_999_999) throw badRequest('Quilometragem inválida.');
 
   const { rows } = await c.query('select id, plate, current_km from vehicles where id = $1 for update', [vehicleId]);
   const v = rows[0];
   if (!v) throw notFound('Veículo não encontrado.');
   const previous = v.current_km;
+  // Registros só com data (manutenção, OS): comparam com os dias anteriores e posteriores,
+  // ignorando leituras do mesmo dia (não se sabe a hora exata).
+  let beforeLimit;
+  let afterLimit;
+  if (dateOnly) {
+    const dayStart = new Date(`${dateOnly}T03:00:00.000Z`); // 00:00 em Brasília
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    readingAt = dateOnly === today ? new Date().toISOString() : new Date(dayStart.getTime() + 12 * 3600e3).toISOString();
+    beforeLimit = new Date(dayStart.getTime() - 1).toISOString();
+    afterLimit = new Date(dayStart.getTime() + 24 * 3600e3 - 1).toISOString();
+  }
   const at = readingAt ? new Date(readingAt) : new Date();
+  beforeLimit ??= at.toISOString();
+  afterLimit ??= at.toISOString();
 
   const { rows: nb } = await c.query(
     `select
        (select km from km_readings where vehicle_id = $1 and not invalidated and reading_at <= $2 order by km desc limit 1) as before_km,
        (select json_build_object('km', km, 'at', reading_at) from km_readings
-         where vehicle_id = $1 and not invalidated and reading_at > $2 order by km asc limit 1) as after`,
-    [vehicleId, at.toISOString()],
+         where vehicle_id = $1 and not invalidated and reading_at > $3 order by km asc limit 1) as after`,
+    [vehicleId, beforeLimit, afterLimit],
   );
   const beforeKm = nb[0].before_km;
   const after = nb[0].after;

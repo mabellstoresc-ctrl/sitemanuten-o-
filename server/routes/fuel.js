@@ -4,27 +4,13 @@ import { requirePerm, requireAny } from '../permissions.js';
 import { audit, diff, snapshot, vehicleEvent } from '../audit.js';
 import { registerKm, invalidateReading, syncCurrentKm } from '../km.js';
 import { recalcVehicleFuel, fuelingDescription, AVG_SQL } from '../fuel.js';
+import { csvResponse } from '../csv.js';
 import { FUELING_TYPES, NON_CONSUMPTION_FUELS, UF, TOWED_TYPES, CONSUMPTION_DEVIATION, labelOf } from '../../shared/constants.js';
 
 const keys = (l) => l.map((i) => i.key);
 const fmtN = (v) => Number(v).toLocaleString('pt-BR');
 const money = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-function csvCell(v) {
-  if (v === null || v === undefined) return '';
-  const s = typeof v === 'number' ? String(v).replace('.', ',') : String(v);
-  return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-function csvResponse(name, header, rows) {
-  const body = '﻿' + [header.join(';'), ...rows.map((r) => r.map(csvCell).join(';'))].join('\r\n');
-  return new Response(body, {
-    headers: {
-      'content-type': 'text/csv; charset=utf-8',
-      'content-disposition': `attachment; filename="${name}-${new Date().toISOString().slice(0, 10)}.csv"`,
-      'cache-control': 'no-store',
-    },
-  });
-}
 const fmtDT = (d) => new Date(d).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
 // ========================= ORDENS DE ABASTECIMENTO =========================

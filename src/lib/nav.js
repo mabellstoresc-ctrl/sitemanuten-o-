@@ -54,11 +54,11 @@ export const MENU = [
   {
     group: 'Manutenção',
     items: [
-      { code: '401', label: 'Ordens de serviço', path: '/manutencao/os', icon: Wrench, module: 'manutencoes', phase: 3 },
-      { code: '402', label: 'Preventivas', path: '/manutencao/preventivas', module: 'manutencoes', phase: 3 },
-      { code: '403', label: 'Corretivas', path: '/manutencao/corretivas', module: 'manutencoes', phase: 3 },
-      { code: '404', label: 'Trocas de óleo', path: '/manutencao/oleo', module: 'manutencoes', phase: 3 },
-      { code: '405', label: 'Calendário', path: '/manutencao/calendario', module: 'manutencoes', phase: 3 },
+      { code: '401', label: 'Ordens de serviço', path: '/manutencao/os', icon: Wrench, module: 'manutencoes' },
+      { code: '402', label: 'Preventivas', path: '/manutencao/preventivas', module: 'manutencoes' },
+      { code: '403', label: 'Corretivas', path: '/manutencao/corretivas', module: 'manutencoes' },
+      { code: '404', label: 'Trocas de óleo', path: '/manutencao/oleo', module: 'manutencoes' },
+      { code: '405', label: 'Calendário', path: '/manutencao/calendario', module: 'manutencoes' },
     ],
   },
   {

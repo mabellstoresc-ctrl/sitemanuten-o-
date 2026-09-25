@@ -42,6 +42,7 @@ export const FIELD_LABELS = {
   manutencao_km: 'Aviso manutenção (km)',
   oleo_km: 'Aviso troca de óleo (km)',
   km_salto_maximo: 'Salto máximo de KM',
+  oleo_intervalo_km: 'Intervalo da troca de óleo (km)',
   nome: 'Nome da empresa',
   fueled_at: 'Data/hora',
   km: 'KM',
@@ -59,6 +60,27 @@ export const FIELD_LABELS = {
   max_liters: 'Limite de litros',
   max_amount: 'Limite de valor',
   cnpj: 'CNPJ',
+  categories: 'Categorias',
+  performed_on: 'Data',
+  workshop: 'Oficina',
+  responsible: 'Responsável',
+  parts_cost: 'Valor das peças',
+  labor_cost: 'Mão de obra',
+  invoice_number: 'Nota fiscal',
+  next_date: 'Próxima (data)',
+  next_km: 'Próxima (KM)',
+  oil_brand: 'Marca do óleo',
+  oil_type: 'Tipo do óleo',
+  oil_spec: 'Especificação',
+  oil_quantity: 'Qtd. de óleo',
+  oil_filter: 'Filtro de óleo',
+  fuel_filter: 'Filtro de combustível',
+  air_filter: 'Filtro de ar',
+  pecas: 'Peças',
+  opened_on: 'Abertura',
+  reported_problem: 'Problema relatado',
+  services_done: 'Serviços realizados',
+  due_date: 'Previsão',
 };
 
 export const ACTION_LABELS = {
@@ -85,6 +107,9 @@ export const ACTION_LABELS = {
   cancelar_ocorrencia: 'Ocorrência cancelada',
   exportar: 'Exportação',
   cancelar: 'Cancelamento',
+  finalizar: 'Finalização',
+  incluir_peca: 'Peça incluída',
+  remover_peca: 'Peça removida',
 };
 
 export const ACCESS_EVENTS = {
@@ -109,4 +134,8 @@ export const ENTITY_LABELS = {
   fueling: 'Abastecimento',
   ordem_abastecimento: 'Ordem de abastecimento',
   fuel_order: 'Ordem de abastecimento',
+  manutencao: 'Manutenção',
+  maintenance: 'Manutenção',
+  ordem_servico: 'Ordem de serviço',
+  service_order: 'Ordem de serviço',
 };

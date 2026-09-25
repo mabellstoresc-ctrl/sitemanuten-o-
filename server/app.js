@@ -11,6 +11,7 @@ import driverRoutes from './routes/drivers.js';
 import fileRoutes from './routes/files.js';
 import miscRoutes from './routes/misc.js';
 import fuelRoutes from './routes/fuel.js';
+import maintenanceRoutes from './routes/maintenance.js';
 
 // ---------- Roteador ----------
 const routes = [];
@@ -35,7 +36,7 @@ const r = {
   del: (p, h, o) => add('DELETE', p, h, o),
 };
 
-for (const register of [authRoutes, userRoutes, fuelRoutes, vehicleRoutes, driverRoutes, fileRoutes, miscRoutes]) register(r);
+for (const register of [authRoutes, userRoutes, fuelRoutes, maintenanceRoutes, vehicleRoutes, driverRoutes, fileRoutes, miscRoutes]) register(r);
 
 function match(method, path) {
   let pathMatched = false;

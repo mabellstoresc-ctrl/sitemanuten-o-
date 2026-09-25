@@ -4,6 +4,7 @@ import { audit, diff } from '../audit.js';
 import { validate } from '../validate.js';
 import { DEFAULT_SETTINGS, TOWED_TYPES, CONSUMPTION_DEVIATION } from '../../shared/constants.js';
 import { AVG_SQL } from '../fuel.js';
+import { maintenancePlans } from '../maintenance.js';
 
 async function getSettings(db) {
   const { rows } = await db.query('select key, value from settings');
@@ -111,6 +112,43 @@ export async function computeAlerts(db, user) {
     }
   }
 
+  if (can(user, 'manutencoes', 'ver') || can(user, 'veiculos', 'ver')) {
+    const plans = await maintenancePlans(db);
+    const nf = (v) => Number(v).toLocaleString('pt-BR');
+    for (const p of plans) {
+      if (p.state === 'ok') continue;
+      const what = p.is_oil ? 'troca de óleo' : `manutenção ${p.type === 'preventiva' ? 'preventiva' : ''} (${p.categories.length} item(ns))`.replace('  ', ' ');
+      const parts = [];
+      if (p.km_left !== null) parts.push(p.km_left <= 0 ? `KM passou ${nf(-p.km_left)} km` : `faltam ${nf(p.km_left)} km`);
+      if (p.days_left !== null) parts.push(p.days_left < 0 ? `data venceu há ${-p.days_left} dia(s)` : p.days_left === 0 ? 'vence hoje' : `em ${p.days_left} dia(s)`);
+      alerts.push({
+        level: p.state === 'vencida' ? 'urgente' : 'atencao',
+        kind: p.is_oil ? 'oleo' : 'manutencao',
+        title: `Veículo ${p.plate} — ${what} ${p.state === 'vencida' ? 'VENCIDA' : 'próxima'}: ${parts.join(', ')}`,
+        link: `/veiculos/${p.vehicle_id}?aba=manutencoes`,
+      });
+    }
+  }
+
+  if (can(user, 'manutencoes', 'ver')) {
+    const { rows } = await db.query(
+      `select so.id, so.number, so.due_date, (current_date - so.due_date) as late, (current_date - so.opened_on) as age, v.plate
+         from service_orders so join vehicles v on v.id = so.vehicle_id
+        where so.status in ('aberta','em_analise','aguardando_peca','em_manutencao')
+          and (so.due_date < current_date or (so.due_date is null and so.opened_on < current_date - 15))`,
+    );
+    for (const so of rows) {
+      alerts.push({
+        level: so.due_date ? 'atencao' : 'info',
+        kind: 'os',
+        title: so.due_date
+          ? `OS nº ${so.number} (${so.plate}) atrasada há ${so.late} dia(s)`
+          : `OS nº ${so.number} (${so.plate}) aberta há ${so.age} dias sem previsão de conclusão`,
+        link: `/manutencao/os/${so.id}`,
+      });
+    }
+  }
+
   const order = { urgente: 0, atencao: 1, info: 2 };
   alerts.sort((x, y) => order[x.level] - order[y.level]);
   return alerts;
@@ -161,6 +199,28 @@ export default function (r) {
     if (can(ctx.user, 'ordens_abastecimento', 'ver')) {
       const { rows: po } = await db.query(`select count(*)::int as n from fuel_orders where status = 'pendente'`);
       out.ordens_pendentes = po[0].n;
+    }
+
+    if (can(ctx.user, 'manutencoes', 'ver')) {
+      const plans = await maintenancePlans(db);
+      const { rows: mc } = await db.query(
+        `select coalesce(sum(total), 0)::float as total, count(*)::int as n from maintenances
+          where status = 'ativo' and performed_on >= date_trunc('month', (now() at time zone 'America/Sao_Paulo'))::date`,
+      );
+      const { rows: so } = await db.query(
+        `select count(*)::int as abertas, count(*) filter (where due_date < current_date)::int as atrasadas from service_orders
+          where status in ('aberta','em_analise','aguardando_peca','em_manutencao')`,
+      );
+      out.manutencao = {
+        vencidas: plans.filter((p) => p.state === 'vencida' && !p.is_oil).length,
+        proximas: plans.filter((p) => p.state === 'proxima' && !p.is_oil).length,
+        oleo_vencidas: plans.filter((p) => p.state === 'vencida' && p.is_oil).length,
+        oleo_proximas: plans.filter((p) => p.state === 'proxima' && p.is_oil).length,
+        gasto_mes: mc[0].total,
+        realizadas_mes: mc[0].n,
+        os_abertas: so[0].abertas,
+        os_atrasadas: so[0].atrasadas,
+      };
     }
 
     const alerts = await computeAlerts(db, ctx.user);
@@ -223,6 +283,19 @@ export default function (r) {
         results.push({ kind: 'motorista', id: d.id, title: d.full_name, subtitle: `CPF ${d.cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')}`, link: `/motoristas/${d.id}` });
       }
     }
+    if (can(ctx.user, 'manutencoes', 'ver')) {
+      const num = q.replace(/^(os|n[ºo°]?)\s*/i, '').replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+      if (num && num.length <= 12) {
+        const { rows } = await ctx.db.query(
+          `select so.id, so.number, so.status, v.plate from service_orders so join vehicles v on v.id = so.vehicle_id
+            where so.number::text like $1 order by so.number desc limit 5`,
+          [`${num}%`],
+        );
+        for (const o of rows) {
+          results.push({ kind: 'ordem serviço', id: o.id, title: `OS nº ${o.number}`, subtitle: `${o.plate} · ${o.status}`, link: `/manutencao/os/${o.id}` });
+        }
+      }
+    }
     if (can(ctx.user, 'ordens_abastecimento', 'ver')) {
       const num = q.replace(/^n[ºo°]?\s*/i, '').replace(/\D/g, '').replace(/^0+(?=\d)/, '');
       if (num && num.length <= 12) {
@@ -259,6 +332,7 @@ export default function (r) {
       manutencao_km: { type: 'int', min: 0, max: 100000, required: true, label: 'Aviso de manutenção (km)' },
       oleo_km: { type: 'int', min: 0, max: 100000, required: true, label: 'Aviso de troca de óleo (km)' },
       km_salto_maximo: { type: 'int', min: 100, max: 100000, required: true, label: 'Salto máximo de KM sem confirmação' },
+      oleo_intervalo_km: { type: 'int', min: 1000, max: 200000, required: true, label: 'Intervalo padrão da troca de óleo (km)' },
     },
     empresa: {
       nome: { type: 'string', max: 120, required: true, label: 'Nome da empresa' },

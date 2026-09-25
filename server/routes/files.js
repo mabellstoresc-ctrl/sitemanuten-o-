@@ -12,6 +12,8 @@ export const ENTITIES = {
   driver: { table: 'drivers', module: 'motoristas', label: 'full_name' },
   fueling: { table: 'fuelings', module: 'abastecimentos', label: 'station' },
   fuel_order: { table: 'fuel_orders', module: 'ordens_abastecimento', label: 'number' },
+  maintenance: { table: 'maintenances', module: 'manutencoes', label: 'performed_on' },
+  service_order: { table: 'service_orders', module: 'manutencoes', label: 'number' },
 };
 
 const CATEGORIES = ['foto', 'documento', 'comprovante', 'nota_fiscal', 'outros'];

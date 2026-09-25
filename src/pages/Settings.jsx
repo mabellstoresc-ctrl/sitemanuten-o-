@@ -28,10 +28,11 @@ function AlertsForm({ initial, canEdit }) {
         <div className="form-grid">
           {num('cnh_dias', 'Avisar CNH vencendo com (dias)', 'Ex.: 30')}
           {num('documento_dias', 'Avisar documentos vencendo com (dias)', 'Fase 5')}
-          {num('manutencao_dias', 'Avisar manutenção por data com (dias)', 'Fase 3')}
-          {num('manutencao_km', 'Avisar manutenção por KM com (km)', 'Fase 3')}
-          {num('oleo_km', 'Avisar troca de óleo com (km)', 'Fase 3')}
+          {num('manutencao_dias', 'Avisar manutenção por data com (dias)', '')}
+          {num('manutencao_km', 'Avisar manutenção por KM com (km)', '')}
+          {num('oleo_km', 'Avisar troca de óleo com (km)', '')}
           {num('km_salto_maximo', 'Pedir confirmação se o KM subir mais de (km)', 'Evita digitar um zero a mais')}
+          {num('oleo_intervalo_km', 'Intervalo padrão da troca de óleo (km)', 'Sugerido ao registrar uma troca')}
         </div>
         {canEdit && (
           <div className="form-actions">

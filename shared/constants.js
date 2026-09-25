@@ -124,6 +124,7 @@ export const DEFAULT_SETTINGS = {
     manutencao_km: 1000,
     oleo_km: 1000,
     km_salto_maximo: 5000,
+    oleo_intervalo_km: 15000,
   },
   empresa: {
     nome: 'Rododimi Transportes e Logística',
@@ -166,3 +167,45 @@ export const UF = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', '
 
 // Consumo com desvio maior que este percentual da média do veículo é sinalizado
 export const CONSUMPTION_DEVIATION = 0.2;
+
+// ----- Fase 3: manutenção -----
+export const MAINTENANCE_TYPES = [
+  { key: 'preventiva', label: 'Preventiva', tone: 'info' },
+  { key: 'corretiva', label: 'Corretiva', tone: 'warn' },
+];
+
+export const MAINTENANCE_CATEGORIES = [
+  { key: 'troca_oleo', label: 'Troca de óleo' },
+  { key: 'filtro_oleo', label: 'Filtro de óleo' },
+  { key: 'filtro_combustivel', label: 'Filtro de combustível' },
+  { key: 'filtro_ar', label: 'Filtro de ar' },
+  { key: 'freios', label: 'Freios' },
+  { key: 'suspensao', label: 'Suspensão' },
+  { key: 'motor', label: 'Motor' },
+  { key: 'cambio', label: 'Câmbio' },
+  { key: 'diferencial', label: 'Diferencial' },
+  { key: 'eletrico', label: 'Sistema elétrico' },
+  { key: 'ar_condicionado', label: 'Ar-condicionado' },
+  { key: 'pneus', label: 'Pneus' },
+  { key: 'alinhamento', label: 'Alinhamento' },
+  { key: 'balanceamento', label: 'Balanceamento' },
+  { key: 'lubrificacao', label: 'Lubrificação' },
+  { key: 'revisao', label: 'Revisão' },
+  { key: 'outros', label: 'Outros' },
+];
+export const OIL_CATEGORY = 'troca_oleo';
+
+export const SERVICE_ORDER_STATUS = [
+  { key: 'aberta', label: 'Aberta', tone: 'info' },
+  { key: 'em_analise', label: 'Em análise', tone: 'info' },
+  { key: 'aguardando_peca', label: 'Aguardando peça', tone: 'warn' },
+  { key: 'em_manutencao', label: 'Em manutenção', tone: 'warn' },
+  { key: 'finalizada', label: 'Finalizada', tone: 'ok' },
+  { key: 'cancelada', label: 'Cancelada', tone: 'off' },
+];
+export const SERVICE_ORDER_OPEN = ['aberta', 'em_analise', 'aguardando_peca', 'em_manutencao'];
+
+export const MAINTENANCE_STATUS = [
+  { key: 'ativo', label: 'Válida', tone: 'ok' },
+  { key: 'cancelado', label: 'Cancelada', tone: 'off' },
+];

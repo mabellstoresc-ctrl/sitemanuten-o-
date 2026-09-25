@@ -93,6 +93,21 @@ export default function Dashboard() {
         </>
       )}
 
+      {data.manutencao && (
+        <>
+          <div className="section-title">Manutenção</div>
+          <div className="kpis">
+            <Kpi label="Manutenções vencidas" value={data.manutencao.vencidas} tone={data.manutencao.vencidas ? 'danger' : 'ok'} to="/manutencao/calendario" />
+            <Kpi label="Manutenções próximas" value={data.manutencao.proximas} tone={data.manutencao.proximas ? 'warn' : ''} to="/manutencao/preventivas" />
+            <Kpi label="Trocas de óleo vencidas" value={data.manutencao.oleo_vencidas} tone={data.manutencao.oleo_vencidas ? 'danger' : 'ok'} to="/manutencao/oleo" />
+            <Kpi label="Trocas de óleo próximas" value={data.manutencao.oleo_proximas} tone={data.manutencao.oleo_proximas ? 'warn' : ''} to="/manutencao/oleo" />
+            <Kpi label="OS em aberto" value={data.manutencao.os_abertas} to="/manutencao/os" />
+            <Kpi label="OS atrasadas" value={data.manutencao.os_atrasadas} tone={data.manutencao.os_atrasadas ? 'danger' : ''} to="/manutencao/os" />
+            <Kpi label="Gasto com manutenção no mês" value={fmtMoney(data.manutencao.gasto_mes)} small to="/manutencao/preventivas" />
+          </div>
+        </>
+      )}
+
       <div className="section-title">Motoristas e alertas</div>
       <div className="kpis">
         {can('motoristas') && (
@@ -152,7 +167,7 @@ export default function Dashboard() {
       </div>
 
       <div className="notice info" style={{ marginTop: 12 }}>
-        Indicadores de manutenção, troca de óleo, pneus, documentos e custos entram neste painel conforme cada módulo for liberado (fases 3 a 5).
+        Indicadores de pneus, documentos e custos consolidados entram neste painel nas fases 4 e 5.
       </div>
     </>
   );

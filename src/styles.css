@@ -378,3 +378,33 @@ a.alert-row:hover { background: #f8fafc; text-decoration: none; }
 .print-order td.k { width: 34%; font-weight: 700; background: #f2f2f2; }
 .print-order .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; text-align: center; }
 .print-order .sign div { border-top: 1px solid #000; padding-top: 6px; }
+
+/* ---------- Manutenção ---------- */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 6px; }
+.check.chip { border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 8px; background: #fff; }
+.check.chip.on { border-color: var(--brand); background: var(--info-bg); }
+.oil-box { border: 1px solid #bfdbfe; background: #f5f9ff; border-radius: var(--radius); padding: 10px 12px; }
+.state-vencida { color: var(--danger); font-weight: 700; }
+.state-proxima { color: var(--warn); font-weight: 700; }
+.state-ok { color: var(--ok); }
+.oil-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.oil-strip .k { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+.oil-strip .v { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meter { height: 8px; background: var(--line-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.meter > div { height: 100%; border-radius: 4px; }
+@media (max-width: 640px) { .oil-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Calendário */
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-left: 1px solid var(--line); border-top: 1px solid var(--line); background: #fff; }
+.cal .dow { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); padding: 6px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #f8fafc; }
+.cal .day { min-height: 96px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px; font-size: 12px; }
+.cal .day.out { background: #fafbfc; color: #a0aab8; }
+.cal .day.today { box-shadow: inset 0 0 0 2px var(--brand); }
+.cal .day .n { font-weight: 700; margin-bottom: 2px; }
+.cal .ev { display: block; border-radius: 4px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); border-left: 3px solid; background: var(--line-2); }
+.cal .ev:hover { text-decoration: none; filter: brightness(.96); }
+.ev.vencida { border-color: var(--danger); background: var(--danger-bg); }
+.ev.proxima { border-color: #f59e0b; background: var(--warn-bg); }
+.ev.ok { border-color: #60a5fa; background: var(--info-bg); }
+.ev.realizada { border-color: var(--ok); background: var(--ok-bg); }
+@media (max-width: 760px) { .cal-wrap { display: none; } }

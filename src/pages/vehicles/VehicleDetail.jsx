@@ -8,6 +8,7 @@ import { PageHead } from '../../components/common.jsx';
 import Attachments, { UploadButton } from '../../components/Attachments.jsx';
 import { AlertList } from '../Dashboard.jsx';
 import { VehicleFuelSummary, VehicleFuelTab } from '../fuel/VehicleFuel.jsx';
+import { VehicleMaintenanceSummary, VehicleMaintenanceTab } from '../maint/VehicleMaintenance.jsx';
 import { KmModal, StatusModal, DriverModal, CoupleModal } from './VehicleModals.jsx';
 import { fmtKm, fmtDate, fmtDateTime, fmtNum, relative } from '../../lib/format.js';
 import { VEHICLE_TYPES, VEHICLE_STATUS, FUEL_TYPES, TOWED_TYPES, TRACTOR_TYPES, labelOf } from '../../../shared/constants.js';
@@ -233,6 +234,7 @@ function Overview({ v, alerts, canEdit, openModal, reload }) {
         </div>
       </div>
 
+      <VehicleMaintenanceSummary vehicle={v} />
       {!towed && (can('abastecimentos') || can('veiculos')) && <VehicleFuelSummary vehicle={v} compact />}
 
       {alerts.length > 0 && (
@@ -277,7 +279,7 @@ function Overview({ v, alerts, canEdit, openModal, reload }) {
 
       {!towed && (
         <div className="notice info" style={{ marginTop: 12 }}>
-          Troca de óleo, próxima manutenção, pneus instalados e custos do mês aparecerão aqui quando os módulos das próximas fases forem liberados.
+          Pneus instalados e custos consolidados aparecerão aqui quando os módulos das próximas fases forem liberados.
         </div>
       )}
     </>
@@ -343,7 +345,7 @@ export default function VehicleDetail() {
   const tabs = [
     { key: 'geral', label: 'Visão geral' },
     !towed && { key: 'abastecimentos', label: 'Abastecimentos' },
-    { key: 'manutencoes', label: 'Manutenções', soon: 3 },
+    { key: 'manutencoes', label: 'Manutenções' },
     { key: 'pneus', label: 'Pneus', soon: 4 },
     !towed && { key: 'motoristas', label: 'Motoristas' },
     { key: 'engates', label: 'Engates' },
@@ -440,7 +442,7 @@ export default function VehicleDetail() {
 
       {tab === 'geral' && <Overview v={v} alerts={vehicleAlerts} canEdit={canEdit} openModal={setModal} reload={reload} />}
       {tab === 'abastecimentos' && <VehicleFuelTab vehicle={v} />}
-      {tab === 'manutencoes' && <SoonTab phase={3} what="Manutenções preventivas e corretivas, ordens de serviço, trocas de óleo e próximas manutenções por data e KM." />}
+      {tab === 'manutencoes' && <VehicleMaintenanceTab vehicle={v} />}
       {tab === 'pneus' && <SoonTab phase={4} what="Mapa visual dos eixos com os pneus instalados, movimentações e recapagens." />}
       {tab === 'custos' && <SoonTab phase={5} what="Custos do mês, do ano, por KM e total do veículo, por categoria." />}
       {tab === 'motoristas' && <DriversTab id={v.id} />}

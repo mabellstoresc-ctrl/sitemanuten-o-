@@ -23,6 +23,12 @@ import FuelingList from './pages/fuel/FuelingList.jsx';
 import FuelingDetail from './pages/fuel/FuelingDetail.jsx';
 import { FuelOrderList, FuelOrderDetail } from './pages/fuel/FuelOrders.jsx';
 import FuelAverages from './pages/fuel/FuelAverages.jsx';
+import MaintenanceList from './pages/maint/MaintenanceList.jsx';
+import MaintenanceForm from './pages/maint/MaintenanceForm.jsx';
+import MaintenanceDetail from './pages/maint/MaintenanceDetail.jsx';
+import OilChanges from './pages/maint/OilChanges.jsx';
+import Calendar from './pages/maint/Calendar.jsx';
+import { ServiceOrderList, ServiceOrderDetail } from './pages/maint/ServiceOrders.jsx';
 import { ALL_ITEMS } from './lib/nav.js';
 
 function Home() {
@@ -64,6 +70,16 @@ function AppRoutes() {
         <Route path="/abastecimentos/medias" element={<FuelAverages />} />
         <Route path="/abastecimentos/:id" element={<FuelingDetail />} />
         <Route path="/abastecimentos/:id/editar" element={<FuelingForm />} />
+
+        <Route path="/manutencao/os" element={<ServiceOrderList />} />
+        <Route path="/manutencao/os/:id" element={<ServiceOrderDetail />} />
+        <Route path="/manutencao/preventivas" element={<MaintenanceList type="preventiva" key="prev" />} />
+        <Route path="/manutencao/corretivas" element={<MaintenanceList type="corretiva" key="corr" />} />
+        <Route path="/manutencao/oleo" element={<OilChanges />} />
+        <Route path="/manutencao/calendario" element={<Calendar />} />
+        <Route path="/manutencao/nova" element={<MaintenanceForm />} />
+        <Route path="/manutencao/:id" element={<MaintenanceDetail />} />
+        <Route path="/manutencao/:id/editar" element={<MaintenanceForm />} />
 
         <Route path="/admin/usuarios" element={<Users />} />
         <Route path="/admin/usuarios/novo" element={<UserForm />} />
