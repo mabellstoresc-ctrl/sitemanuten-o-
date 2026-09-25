@@ -1,0 +1,24 @@
+# Configuração de deploy na Netlify
+# - O frontend (React/Vite) é gerado em "dist".
+# - A API roda como Netlify Function em /api/* (ver netlify/functions/api.mjs).
+# - O frontend usa rotas com "#" (HashRouter), então não é necessário redirect de SPA.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["pg"]
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    Permissions-Policy = "geolocation=(), microphone=()"
