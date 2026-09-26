@@ -125,6 +125,8 @@ export const DEFAULT_SETTINGS = {
     oleo_km: 1000,
     km_salto_maximo: 5000,
     oleo_intervalo_km: 15000,
+    pneu_inspecao_dias: 30,
+    pneu_sulco_minimo: 3,
   },
   empresa: {
     nome: 'Rododimi Transportes e Logística',
@@ -209,3 +211,78 @@ export const MAINTENANCE_STATUS = [
   { key: 'ativo', label: 'Válida', tone: 'ok' },
   { key: 'cancelado', label: 'Cancelada', tone: 'off' },
 ];
+
+// ----- Fase 4: pneus -----
+export const TIRE_STATUS = [
+  { key: 'novo', label: 'Novo', tone: 'info' },
+  { key: 'em_uso', label: 'Em uso', tone: 'ok' },
+  { key: 'estoque', label: 'Em estoque', tone: 'muted' },
+  { key: 'recapagem', label: 'Recapagem', tone: 'warn' },
+  { key: 'retirado', label: 'Retirado', tone: 'off' },
+  { key: 'descartado', label: 'Descartado', tone: 'off' },
+];
+// Pneus que podem ser instalados
+export const TIRE_AVAILABLE = ['novo', 'estoque', 'retirado'];
+
+export const TIRE_ACTIONS = [
+  { key: 'cadastro', label: 'Cadastro' },
+  { key: 'instalar', label: 'Instalado' },
+  { key: 'trocar_posicao', label: 'Troca de posição' },
+  { key: 'trocar_veiculo', label: 'Troca de veículo' },
+  { key: 'estoque', label: 'Enviado para estoque' },
+  { key: 'recapagem', label: 'Enviado para recapagem' },
+  { key: 'retorno_recapagem', label: 'Retorno da recapagem' },
+  { key: 'retirar', label: 'Retirado' },
+  { key: 'descartar', label: 'Descartado' },
+  { key: 'inspecao', label: 'Inspeção' },
+];
+
+/**
+ * Configurações de eixos. Cada eixo: nome e se é rodado duplo.
+ * Posições geradas: E{n}-E / E{n}-D (simples) ou E{n}-EE, E{n}-EI, E{n}-DI, E{n}-DE (duplo) e ESTEPE-n.
+ */
+export const AXLE_LAYOUTS = [
+  { key: '4x2', label: '4x2 (toco)', axles: [{ name: 'Dianteiro', dual: false }, { name: 'Traseiro (tração)', dual: true }], spares: 1 },
+  { key: '6x2', label: '6x2 (truck / cavalo 3 eixos)', axles: [{ name: 'Dianteiro', dual: false }, { name: 'Traseiro 1 (tração)', dual: true }, { name: 'Traseiro 2', dual: true }], spares: 1 },
+  { key: '6x4', label: '6x4 (traçado)', axles: [{ name: 'Dianteiro', dual: false }, { name: 'Traseiro 1 (tração)', dual: true }, { name: 'Traseiro 2 (tração)', dual: true }], spares: 1 },
+  { key: '8x2', label: '8x2 (bitruck)', axles: [{ name: 'Dianteiro 1', dual: false }, { name: 'Dianteiro 2', dual: false }, { name: 'Traseiro 1 (tração)', dual: true }, { name: 'Traseiro 2', dual: true }], spares: 1 },
+  { key: '8x4', label: '8x4', axles: [{ name: 'Dianteiro 1', dual: false }, { name: 'Dianteiro 2', dual: false }, { name: 'Traseiro 1 (tração)', dual: true }, { name: 'Traseiro 2 (tração)', dual: true }], spares: 1 },
+  { key: '2 eixos', label: 'Carreta 2 eixos', axles: [{ name: 'Eixo 1', dual: true }, { name: 'Eixo 2', dual: true }], spares: 1 },
+  { key: '3 eixos', label: 'Carreta 3 eixos', axles: [{ name: 'Eixo 1', dual: true }, { name: 'Eixo 2', dual: true }, { name: 'Eixo 3', dual: true }], spares: 2 },
+  { key: '4 eixos', label: 'Carreta 4 eixos', axles: [{ name: 'Eixo 1', dual: true }, { name: 'Eixo 2', dual: true }, { name: 'Eixo 3', dual: true }, { name: 'Eixo 4', dual: true }], spares: 2 },
+  { key: 'simples', label: 'Utilitário (4 rodas)', axles: [{ name: 'Dianteiro', dual: false }, { name: 'Traseiro', dual: false }], spares: 1 },
+];
+
+const DEFAULT_LAYOUT_BY_TYPE = { cavalo: '6x2', caminhao: '6x2', carreta: '3 eixos', implemento: '2 eixos', utilitario: 'simples', outros: '4x2' };
+
+export function layoutFor(vehicle) {
+  const cfg = String(vehicle?.axle_config || '').trim().toLowerCase();
+  return AXLE_LAYOUTS.find((l) => l.key === cfg) || AXLE_LAYOUTS.find((l) => l.key === DEFAULT_LAYOUT_BY_TYPE[vehicle?.type]) || AXLE_LAYOUTS[1];
+}
+
+/** Lista de posições [{ code, label, axle, side, spare }] da configuração do veículo. */
+export function positionsFor(vehicle) {
+  const layout = layoutFor(vehicle);
+  const out = [];
+  layout.axles.forEach((a, i) => {
+    const n = i + 1;
+    const sides = a.dual
+      ? [
+          ['EE', 'externo esquerdo'],
+          ['EI', 'interno esquerdo'],
+          ['DI', 'interno direito'],
+          ['DE', 'externo direito'],
+        ]
+      : [
+          ['E', 'esquerdo'],
+          ['D', 'direito'],
+        ];
+    for (const [s, l] of sides) out.push({ code: `E${n}-${s}`, label: `${a.name} — ${l}`, axle: n, side: s, spare: false });
+  });
+  for (let i = 1; i <= layout.spares; i++) out.push({ code: `ESTEPE-${i}`, label: `Estepe ${i}`, axle: null, side: null, spare: true });
+  return out;
+}
+
+export function positionLabel(vehicle, code) {
+  return positionsFor(vehicle).find((p) => p.code === code)?.label || code || '';
+}

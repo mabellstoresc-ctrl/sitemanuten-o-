@@ -12,6 +12,7 @@ import fileRoutes from './routes/files.js';
 import miscRoutes from './routes/misc.js';
 import fuelRoutes from './routes/fuel.js';
 import maintenanceRoutes from './routes/maintenance.js';
+import tireRoutes from './routes/tires.js';
 
 // ---------- Roteador ----------
 const routes = [];
@@ -36,7 +37,7 @@ const r = {
   del: (p, h, o) => add('DELETE', p, h, o),
 };
 
-for (const register of [authRoutes, userRoutes, fuelRoutes, maintenanceRoutes, vehicleRoutes, driverRoutes, fileRoutes, miscRoutes]) register(r);
+for (const register of [authRoutes, userRoutes, fuelRoutes, maintenanceRoutes, tireRoutes, vehicleRoutes, driverRoutes, fileRoutes, miscRoutes]) register(r);
 
 function match(method, path) {
   let pathMatched = false;
@@ -204,6 +205,10 @@ function duplicateMessage(err) {
   if (c.includes('open_vehicle')) return 'Este veículo já possui um motorista vinculado.';
   if (c.includes('open_driver')) return 'Este motorista já está vinculado a outro veículo.';
   if (c.includes('open_trailer')) return 'Este implemento já está engatado em outro veículo.';
+  if (c.includes('tires_code')) return 'Já existe um pneu com este código.';
+  if (c.includes('tires_fire')) return 'Já existe um pneu com este número de fogo.';
+  if (c.includes('tires_position')) return 'Esta posição já tem um pneu.';
+  if (c.includes('tire_retreads_open')) return 'Este pneu já está na recapagem.';
   if (c.includes('fuelings_order')) return 'Esta ordem de abastecimento já foi utilizada em outro abastecimento.';
   return 'Registro duplicado.';
 }

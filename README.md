@@ -110,6 +110,20 @@ Os outros usuários que esquecerem a senha devem falar com o administrador, que 
 - **Calendário (405):** filtros Hoje, Esta semana, Este mês, Atrasadas e Próximas. Manutenções por KM ganham uma **data estimada** pelo ritmo de rodagem do veículo nos últimos 90 dias.
 - **KM atualizado automaticamente:** o KM informado na OS ou na manutenção atualiza o veículo com as mesmas regras de coerência. Registros só com data comparam com os dias anteriores e posteriores.
 
+## Pneus (fase 4)
+
+- **Cadastro** de cada pneu: código interno, número de fogo, marca, modelo, medida, compra, KM inicial e vida útil estimada.
+- **Mapa visual dos eixos** (aba Pneus do veículo e tela 501). A configuração de eixos vem do cadastro do veículo: 4x2, 6x2, 6x4, 8x2, 8x4, carreta de 2, 3 ou 4 eixos, ou utilitário, com estepes. Ao clicar numa posição o sistema mostra o pneu (código, marca, KM, histórico, data de instalação) ou permite instalar um.
+- **Mover pneu:** trocar de posição (se a posição estiver ocupada, os dois trocam de lugar — rodízio), trocar de veículo, enviar para estoque, enviar para recapagem, retirar ou descartar. Cada movimentação registra data, KM, veículo e posição anteriores e novos, usuário e motivo. **O histórico nunca é apagado.**
+- **KM do pneu calculado automaticamente** pelo KM do veículo enquanto está instalado. Nas carretas, conta o KM rodado pelo cavalo durante o engate.
+- **Recapagens (504):** envio com empresa, tipo e valor, e retorno aprovado (volta ao estoque) ou reprovado (descarte). O sistema guarda quantas recapagens cada pneu recebeu.
+- **Inspeção:** sulco, pressão e estado. Geram alertas o sulco abaixo do mínimo, o pneu sem inspeção há mais dias que o configurado e o pneu com 90% da vida útil.
+- Telas: 501 Instalados, 502 Estoque, 503 Movimentações, 504 Recapagens e 505 Histórico. Pneus também aparecem na pesquisa global.
+
+## Datas e fuso horário
+
+Todas as datas calculadas pelo servidor (vencimentos, "hoje", mês atual) seguem o horário de Brasília, mesmo com o banco de dados em UTC.
+
 ## Regras de quilometragem
 
 - O KM nunca diminui sem **confirmação do Administrador Principal** e motivo. A correção fica na auditoria.
@@ -172,5 +186,5 @@ tests/                      testes da API
 1. **Base** (entregue): login, usuários, permissões, auditoria, histórico de acessos, veículos, implementos e engates, motoristas e ocorrências, regras de KM, anexos, painel, alertas de CNH, pesquisa global, configurações.
 2. **Abastecimentos** (entregue): ordens de abastecimento, médias de consumo e gráficos.
 3. **Manutenção** (entregue): ordens de serviço, preventivas/corretivas, troca de óleo, próximas manutenções, calendário e alertas.
-4. Pneus: cadastro, mapa de eixos, movimentações, recapagens e histórico.
+4. **Pneus** (entregue): cadastro, mapa de eixos, movimentações, recapagens, inspeções e histórico.
 5. Checklists, documentos com vencimento, custos, relatórios PDF/Excel e backup pelo sistema.

@@ -40,7 +40,7 @@ export async function maintenancePlans(db, { vehicleId = null } = {}) {
      select c.id as maintenance_id, c.vehicle_id, c.performed_on, c.km, c.next_date, c.next_km, c.type, c.description,
             array_agg(c.cat order by c.cat) as categories,
             v.plate, v.fleet_number, v.model, v.current_km, v.status as vehicle_status,
-            (c.next_date - current_date) as days_left, (c.next_km - v.current_km) as km_left
+            (c.next_date - (now() at time zone 'America/Sao_Paulo')::date) as days_left, (c.next_km - v.current_km) as km_left
        from cats c join vehicles v on v.id = c.vehicle_id
       where c.rn = 1 and (c.next_date is not null or c.next_km is not null) and v.status <> 'inativo'
       group by c.id, c.vehicle_id, c.performed_on, c.km, c.next_date, c.next_km, c.type, c.description,
@@ -83,7 +83,7 @@ export async function oilStatus(db, { vehicleId = null } = {}) {
     `select v.id as vehicle_id, v.plate, v.fleet_number, v.model, v.current_km, v.status as vehicle_status,
             m.id as maintenance_id, m.performed_on, m.km as last_km, m.next_km, m.next_date, m.oil_brand, m.oil_type, m.oil_spec,
             m.oil_quantity, m.oil_filter, m.fuel_filter, m.air_filter, m.workshop, m.total,
-            (m.next_km - v.current_km) as km_left, (m.next_date - current_date) as days_left,
+            (m.next_km - v.current_km) as km_left, (m.next_date - (now() at time zone 'America/Sao_Paulo')::date) as days_left,
             (v.current_km - m.km) as km_since
        from vehicles v
        left join lateral (

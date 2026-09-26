@@ -277,11 +277,11 @@ export default function (r) {
     if (q.falhas === '1') where.push(`event in ('login_falha','login_bloqueado','login_suspeito','senha_falha')`);
     if (q.from) {
       params.push(q.from);
-      where.push(`created_at >= $${params.length}::date`);
+      where.push(`created_at >= ($${params.length}::date)::timestamp at time zone 'America/Sao_Paulo'`);
     }
     if (q.to) {
       params.push(q.to);
-      where.push(`created_at < $${params.length}::date + 1`);
+      where.push(`created_at < ($${params.length}::date + 1)::timestamp at time zone 'America/Sao_Paulo'`);
     }
     const limit = Math.min(Number(q.limit) || 200, 1000);
     const { rows } = await ctx.db.query(

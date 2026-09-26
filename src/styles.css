@@ -408,3 +408,34 @@ a.alert-row:hover { background: #f8fafc; text-decoration: none; }
 .ev.ok { border-color: #60a5fa; background: var(--info-bg); }
 .ev.realizada { border-color: var(--ok); background: var(--ok-bg); }
 @media (max-width: 760px) { .cal-wrap { display: none; } }
+
+/* ---------- Mapa de pneus ---------- */
+.tire-map-wrap { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 16px; align-items: start; }
+.tire-map { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 10px; }
+.tm-head { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.axle { display: grid; grid-template-columns: 1fr 88px 1fr; align-items: center; margin: 10px 0; }
+.axle .side { display: flex; gap: 4px; }
+.axle .side.left { justify-content: flex-end; }
+.axle .side.right { justify-content: flex-start; }
+.axle .bar { height: 10px; background: #94a3b8; border-radius: 5px; position: relative; margin: 0 2px; }
+.axle .bar span { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
+.tbox {
+  width: 58px; height: 74px; border-radius: 8px; border: 2px solid #334155; background: #1e293b; color: #fff; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 2px; font-size: 11px;
+}
+.tbox .tcode { font-weight: 700; font-family: ui-monospace, Menlo, monospace; font-size: 11px; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tbox .tkm { font-size: 9.5px; opacity: .8; }
+.tbox.empty { background: #fff; border: 2px dashed #cbd5e1; color: #94a3b8; }
+.tbox .tplus { font-size: 20px; }
+.tbox.warn { border-color: #f59e0b; box-shadow: 0 0 0 2px #fde68a; }
+.tbox.sel { outline: 3px solid var(--brand); outline-offset: 2px; }
+.tbox:hover { filter: brightness(1.15); }
+.spares { display: flex; gap: 6px; align-items: center; justify-content: center; margin-top: 16px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.tm-legend { display: flex; gap: 6px; align-items: center; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+.tm-legend .lg { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 2px solid #334155; background: #1e293b; }
+.tm-legend .lg.lg-warn { border-color: #f59e0b; }
+.tm-legend .lg.lg-empty { background: #fff; border: 2px dashed #cbd5e1; }
+.tire-panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+.tire-panel h3 { margin-bottom: 2px; }
+@media (max-width: 860px) { .tire-map-wrap { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 400px) { .tbox { width: 50px; height: 66px; } .axle { grid-template-columns: 1fr 56px 1fr; } }

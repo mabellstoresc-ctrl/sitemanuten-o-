@@ -15,7 +15,7 @@ const ENUMS = {
   type: [...VEHICLE_TYPES],
   fuel_type: [...FUEL_TYPES, ...FUELING_TYPES],
 };
-const MONEY = ['total', 'price_per_liter', 'max_amount', 'parts_cost', 'labor_cost'];
+const MONEY = ['total', 'price_per_liter', 'max_amount', 'parts_cost', 'labor_cost', 'purchase_value'];
 const actionShort = Object.fromEntries(ACTIONS.map((a) => [a.key, a.label.toLowerCase()]));
 
 function fmtValue(campo, v) {
@@ -88,6 +88,8 @@ function entityLink(e) {
     maintenance: '/manutencao/',
     ordem_servico: '/manutencao/os/',
     service_order: '/manutencao/os/',
+    pneu: '/pneus/',
+    tire: '/pneus/',
   };
   const base = map[e.entity];
   const label = e.entity_label || e.entity_id.slice(0, 8);

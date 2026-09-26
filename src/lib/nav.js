@@ -64,11 +64,11 @@ export const MENU = [
   {
     group: 'Pneus',
     items: [
-      { code: '501', label: 'Pneus instalados', path: '/pneus', icon: CircleDot, module: 'pneus', phase: 4 },
-      { code: '502', label: 'Estoque', path: '/pneus/estoque', module: 'pneus', phase: 4 },
-      { code: '503', label: 'Movimentações', path: '/pneus/movimentacoes', module: 'pneus', phase: 4 },
-      { code: '504', label: 'Recapagens', path: '/pneus/recapagens', module: 'pneus', phase: 4 },
-      { code: '505', label: 'Histórico', path: '/pneus/historico', module: 'pneus', phase: 4 },
+      { code: '501', label: 'Pneus instalados', path: '/pneus', icon: CircleDot, module: 'pneus' },
+      { code: '502', label: 'Estoque', path: '/pneus/estoque', module: 'pneus' },
+      { code: '503', label: 'Movimentações', path: '/pneus/movimentacoes', module: 'pneus' },
+      { code: '504', label: 'Recapagens', path: '/pneus/recapagens', module: 'pneus' },
+      { code: '505', label: 'Histórico', path: '/pneus/historico', module: 'pneus' },
     ],
   },
   {

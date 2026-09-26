@@ -175,7 +175,7 @@ const SO_SELECT = `
   select so.*, v.plate, v.fleet_number, v.model, v.current_km, v.status as vehicle_status,
          u.username as created_by_name, cu.username as cancelled_by_name,
          (select coalesce(sum(total), 0) from maintenance_parts p where p.service_order_id = so.id)::float as parts_total,
-         (so.due_date < current_date and so.status in ('aberta','em_analise','aguardando_peca','em_manutencao')) as late,
+         (so.due_date < (now() at time zone 'America/Sao_Paulo')::date and so.status in ('aberta','em_analise','aguardando_peca','em_manutencao')) as late,
          m.total as maintenance_total
     from service_orders so
     join vehicles v on v.id = so.vehicle_id
@@ -274,7 +274,7 @@ export default function (r) {
     const { rows: sos } = await ctx.db.query(
       `select so.id, so.number, so.due_date, so.opened_on, so.status, so.reported_problem, v.id as vehicle_id, v.plate
          from service_orders so join vehicles v on v.id = so.vehicle_id
-        where so.status = any($1) and (so.due_date between $2 and $3 or so.due_date < current_date)`,
+        where so.status = any($1) and (so.due_date between $2 and $3 or so.due_date < (now() at time zone 'America/Sao_Paulo')::date)`,
       [SERVICE_ORDER_OPEN, from, to],
     );
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
@@ -329,8 +329,8 @@ export default function (r) {
       [id],
     );
     const { rows: cost } = await ctx.db.query(
-      `select coalesce(sum(total) filter (where performed_on >= date_trunc('month', current_date)), 0)::float as month,
-              coalesce(sum(total) filter (where performed_on >= date_trunc('year', current_date)), 0)::float as year,
+      `select coalesce(sum(total) filter (where performed_on >= date_trunc('month', (now() at time zone 'America/Sao_Paulo')::date)), 0)::float as month,
+              coalesce(sum(total) filter (where performed_on >= date_trunc('year', (now() at time zone 'America/Sao_Paulo')::date)), 0)::float as year,
               coalesce(sum(total), 0)::float as all_time
          from maintenances where vehicle_id = $1 and status = 'ativo'`,
       [id],

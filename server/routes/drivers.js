@@ -19,7 +19,7 @@ const FIELDS = {
 const EDITABLE = Object.keys(FIELDS);
 
 const BASE_SELECT = `
-  select d.*, (d.cnh_expiry - current_date) as cnh_days_left,
+  select d.*, (d.cnh_expiry - (now() at time zone 'America/Sao_Paulo')::date) as cnh_days_left,
          v.id as vehicle_id, v.plate as vehicle_plate, v.fleet_number as vehicle_fleet, a.start_at as vehicle_since
     from drivers d
     left join driver_assignments a on a.driver_id = d.id and a.end_at is null
@@ -62,7 +62,7 @@ export default function (r) {
     if (q.status) where.push(`d.status = ${p(q.status)}`);
     else if (q.inativos !== '1') where.push(`d.status <> 'inativo'`);
     if (q.cnh === 'vencendo') {
-      where.push(`d.cnh_expiry <= current_date + ${p(Number(q.dias) || 30)}::int`);
+      where.push(`d.cnh_expiry <= (now() at time zone 'America/Sao_Paulo')::date + ${p(Number(q.dias) || 30)}::int`);
     }
     const { rows } = await ctx.db.query(
       `${BASE_SELECT} ${where.length ? 'where ' + where.join(' and ') : ''} order by d.full_name`,

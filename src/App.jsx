@@ -29,6 +29,7 @@ import MaintenanceDetail from './pages/maint/MaintenanceDetail.jsx';
 import OilChanges from './pages/maint/OilChanges.jsx';
 import Calendar from './pages/maint/Calendar.jsx';
 import { ServiceOrderList, ServiceOrderDetail } from './pages/maint/ServiceOrders.jsx';
+import { InstalledTires, TireStock, TireMovements, TireRetreads, TireHistoryList, TireForm, TireDetail } from './pages/tires/TirePages.jsx';
 import { ALL_ITEMS } from './lib/nav.js';
 
 function Home() {
@@ -80,6 +81,15 @@ function AppRoutes() {
         <Route path="/manutencao/nova" element={<MaintenanceForm />} />
         <Route path="/manutencao/:id" element={<MaintenanceDetail />} />
         <Route path="/manutencao/:id/editar" element={<MaintenanceForm />} />
+
+        <Route path="/pneus" element={<InstalledTires />} />
+        <Route path="/pneus/estoque" element={<TireStock />} />
+        <Route path="/pneus/movimentacoes" element={<TireMovements />} />
+        <Route path="/pneus/recapagens" element={<TireRetreads />} />
+        <Route path="/pneus/historico" element={<TireHistoryList />} />
+        <Route path="/pneus/novo" element={<TireForm />} />
+        <Route path="/pneus/:id" element={<TireDetail />} />
+        <Route path="/pneus/:id/editar" element={<TireForm />} />
 
         <Route path="/admin/usuarios" element={<Users />} />
         <Route path="/admin/usuarios/novo" element={<UserForm />} />

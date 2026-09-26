@@ -5,6 +5,7 @@ import { validate } from '../validate.js';
 import { DEFAULT_SETTINGS, TOWED_TYPES, CONSUMPTION_DEVIATION } from '../../shared/constants.js';
 import { AVG_SQL } from '../fuel.js';
 import { maintenancePlans } from '../maintenance.js';
+import { tiresNeedingAttention } from './tires.js';
 
 async function getSettings(db) {
   const { rows } = await db.query('select key, value from settings');
@@ -24,8 +25,8 @@ export async function computeAlerts(db, user) {
 
   if (can(user, 'motoristas', 'ver')) {
     const { rows } = await db.query(
-      `select id, full_name, cnh_expiry, (cnh_expiry - current_date) as days from drivers
-        where status <> 'inativo' and cnh_expiry is not null and cnh_expiry <= current_date + $1::int
+      `select id, full_name, cnh_expiry, (cnh_expiry - (now() at time zone 'America/Sao_Paulo')::date) as days from drivers
+        where status <> 'inativo' and cnh_expiry is not null and cnh_expiry <= (now() at time zone 'America/Sao_Paulo')::date + $1::int
         order by cnh_expiry`,
       [a.cnh_dias],
     );
@@ -55,7 +56,7 @@ export async function computeAlerts(db, user) {
   if (can(user, 'veiculos', 'ver')) {
     // O KM alimenta os alertas de óleo e manutenção: avisa quando está desatualizado
     const { rows } = await db.query(
-      `select id, plate, fleet_number, km_updated_at, (current_date - km_updated_at::date) as days from vehicles
+      `select id, plate, fleet_number, km_updated_at, ((now() at time zone 'America/Sao_Paulo')::date - km_updated_at::date) as days from vehicles
         where status in ('disponivel', 'em_viagem') and not (type = any($1))
           and (km_updated_at is null or km_updated_at < now() - interval '15 days')
         order by km_updated_at nulls first`,
@@ -75,8 +76,8 @@ export async function computeAlerts(db, user) {
 
   if (can(user, 'ordens_abastecimento', 'ver')) {
     const { rows } = await db.query(
-      `select o.id, o.number, v.plate, (current_date - o.order_date) as days from fuel_orders o join vehicles v on v.id = o.vehicle_id
-        where o.status = 'pendente' and o.order_date < current_date - 3 order by o.order_date`,
+      `select o.id, o.number, v.plate, ((now() at time zone 'America/Sao_Paulo')::date - o.order_date) as days from fuel_orders o join vehicles v on v.id = o.vehicle_id
+        where o.status = 'pendente' and o.order_date < (now() at time zone 'America/Sao_Paulo')::date - 3 order by o.order_date`,
     );
     for (const o of rows) {
       alerts.push({
@@ -132,10 +133,10 @@ export async function computeAlerts(db, user) {
 
   if (can(user, 'manutencoes', 'ver')) {
     const { rows } = await db.query(
-      `select so.id, so.number, so.due_date, (current_date - so.due_date) as late, (current_date - so.opened_on) as age, v.plate
+      `select so.id, so.number, so.due_date, ((now() at time zone 'America/Sao_Paulo')::date - so.due_date) as late, ((now() at time zone 'America/Sao_Paulo')::date - so.opened_on) as age, v.plate
          from service_orders so join vehicles v on v.id = so.vehicle_id
         where so.status in ('aberta','em_analise','aguardando_peca','em_manutencao')
-          and (so.due_date < current_date or (so.due_date is null and so.opened_on < current_date - 15))`,
+          and (so.due_date < (now() at time zone 'America/Sao_Paulo')::date or (so.due_date is null and so.opened_on < (now() at time zone 'America/Sao_Paulo')::date - 15))`,
     );
     for (const so of rows) {
       alerts.push({
@@ -145,6 +146,18 @@ export async function computeAlerts(db, user) {
           ? `OS nº ${so.number} (${so.plate}) atrasada há ${so.late} dia(s)`
           : `OS nº ${so.number} (${so.plate}) aberta há ${so.age} dias sem previsão de conclusão`,
         link: `/manutencao/os/${so.id}`,
+      });
+    }
+  }
+
+  if (can(user, 'pneus', 'ver')) {
+    for (const t of await tiresNeedingAttention(db)) {
+      const severe = t.attention.some((a) => a.startsWith('sulco'));
+      alerts.push({
+        level: severe ? 'urgente' : 'atencao',
+        kind: 'pneu',
+        title: `Pneu ${t.code} (${t.plate} · ${t.position_label}) precisa de atenção: ${t.attention.join(', ')}`,
+        link: `/pneus/${t.id}`,
       });
     }
   }
@@ -208,7 +221,7 @@ export default function (r) {
           where status = 'ativo' and performed_on >= date_trunc('month', (now() at time zone 'America/Sao_Paulo'))::date`,
       );
       const { rows: so } = await db.query(
-        `select count(*)::int as abertas, count(*) filter (where due_date < current_date)::int as atrasadas from service_orders
+        `select count(*)::int as abertas, count(*) filter (where due_date < (now() at time zone 'America/Sao_Paulo')::date)::int as atrasadas from service_orders
           where status in ('aberta','em_analise','aguardando_peca','em_manutencao')`,
       );
       out.manutencao = {
@@ -221,6 +234,14 @@ export default function (r) {
         os_abertas: so[0].abertas,
         os_atrasadas: so[0].atrasadas,
       };
+    }
+
+    if (can(ctx.user, 'pneus', 'ver')) {
+      const { rows: tr } = await db.query(
+        `select count(*) filter (where status = 'em_uso')::int as em_uso, count(*) filter (where status in ('novo','estoque','retirado'))::int as estoque,
+                count(*) filter (where status = 'recapagem')::int as recapagem from tires`,
+      );
+      out.pneus = { ...tr[0], atencao: (await tiresNeedingAttention(db)).length };
     }
 
     const alerts = await computeAlerts(db, ctx.user);
@@ -283,6 +304,16 @@ export default function (r) {
         results.push({ kind: 'motorista', id: d.id, title: d.full_name, subtitle: `CPF ${d.cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')}`, link: `/motoristas/${d.id}` });
       }
     }
+    if (can(ctx.user, 'pneus', 'ver')) {
+      const { rows } = await ctx.db.query(
+        `select t.id, t.code, t.fire_number, t.status, t.brand, t.size, v.plate from tires t left join vehicles v on v.id = t.vehicle_id
+          where t.code ilike $1 or t.fire_number ilike $1 order by t.code limit 6`,
+        [like],
+      );
+      for (const t of rows) {
+        results.push({ kind: 'pneu', id: t.id, title: `Pneu ${t.code}${t.fire_number ? ` · fogo ${t.fire_number}` : ''}`, subtitle: [t.brand, t.size, t.plate || t.status].filter(Boolean).join(' · '), link: `/pneus/${t.id}` });
+      }
+    }
     if (can(ctx.user, 'manutencoes', 'ver')) {
       const num = q.replace(/^(os|n[ºo°]?)\s*/i, '').replace(/\D/g, '').replace(/^0+(?=\d)/, '');
       if (num && num.length <= 12) {
@@ -333,6 +364,8 @@ export default function (r) {
       oleo_km: { type: 'int', min: 0, max: 100000, required: true, label: 'Aviso de troca de óleo (km)' },
       km_salto_maximo: { type: 'int', min: 100, max: 100000, required: true, label: 'Salto máximo de KM sem confirmação' },
       oleo_intervalo_km: { type: 'int', min: 1000, max: 200000, required: true, label: 'Intervalo padrão da troca de óleo (km)' },
+      pneu_inspecao_dias: { type: 'int', min: 1, max: 365, required: true, label: 'Inspeção de pneus a cada (dias)' },
+      pneu_sulco_minimo: { type: 'number', min: 0, max: 20, required: true, label: 'Sulco mínimo do pneu (mm)' },
     },
     empresa: {
       nome: { type: 'string', max: 120, required: true, label: 'Nome da empresa' },
@@ -377,8 +410,8 @@ export default function (r) {
     if (q.action) where.push(`action = ${p(q.action)}`);
     if (q.entity) where.push(`entity = ${p(q.entity)}`);
     if (q.entity_id) where.push(`entity_id = ${p(q.entity_id)}`);
-    if (q.from) where.push(`created_at >= ${p(q.from)}::date`);
-    if (q.to) where.push(`created_at < ${p(q.to)}::date + 1`);
+    if (q.from) where.push(`created_at >= (${p(q.from)}::date)::timestamp at time zone 'America/Sao_Paulo'`);
+    if (q.to) where.push(`created_at < (${p(q.to)}::date + 1)::timestamp at time zone 'America/Sao_Paulo'`);
     if (q.q) where.push(`(entity_label ilike ${p(`%${q.q}%`)} or reason ilike $${params.length} or username ilike $${params.length})`);
     return { where: where.length ? `where ${where.join(' and ')}` : '', params };
   }

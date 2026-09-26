@@ -108,6 +108,18 @@ export default function Dashboard() {
         </>
       )}
 
+      {data.pneus && (
+        <>
+          <div className="section-title">Pneus</div>
+          <div className="kpis">
+            <Kpi label="Pneus em uso" value={data.pneus.em_uso} to="/pneus" />
+            <Kpi label="Pneus precisando de atenção" value={data.pneus.atencao} tone={data.pneus.atencao ? 'warn' : 'ok'} to="/pneus?atencao=1" />
+            <Kpi label="Em estoque" value={data.pneus.estoque} to="/pneus/estoque" />
+            <Kpi label="Na recapagem" value={data.pneus.recapagem} to="/pneus/recapagens" />
+          </div>
+        </>
+      )}
+
       <div className="section-title">Motoristas e alertas</div>
       <div className="kpis">
         {can('motoristas') && (
@@ -167,7 +179,7 @@ export default function Dashboard() {
       </div>
 
       <div className="notice info" style={{ marginTop: 12 }}>
-        Indicadores de pneus, documentos e custos consolidados entram neste painel nas fases 4 e 5.
+        Indicadores de documentos e custos consolidados entram neste painel na fase 5.
       </div>
     </>
   );

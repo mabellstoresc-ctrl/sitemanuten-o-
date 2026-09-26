@@ -3,9 +3,11 @@
 import m001 from './001_base.js';
 import m002 from './002_abastecimentos.js';
 import m003 from './003_manutencao.js';
+import m004 from './004_pneus.js';
 
 export default [
   { version: '001_base', sql: m001 },
   { version: '002_abastecimentos', sql: m002 },
   { version: '003_manutencao', sql: m003 },
+  { version: '004_pneus', sql: m004 },
 ];

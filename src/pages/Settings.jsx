@@ -33,6 +33,8 @@ function AlertsForm({ initial, canEdit }) {
           {num('oleo_km', 'Avisar troca de óleo com (km)', '')}
           {num('km_salto_maximo', 'Pedir confirmação se o KM subir mais de (km)', 'Evita digitar um zero a mais')}
           {num('oleo_intervalo_km', 'Intervalo padrão da troca de óleo (km)', 'Sugerido ao registrar uma troca')}
+          {num('pneu_inspecao_dias', 'Inspecionar pneus a cada (dias)', 'Alerta de pneu sem inspeção')}
+          {num('pneu_sulco_minimo', 'Sulco mínimo do pneu (mm)', 'Abaixo disso gera alerta urgente')}
         </div>
         {canEdit && (
           <div className="form-actions">

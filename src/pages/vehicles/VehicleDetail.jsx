@@ -9,6 +9,7 @@ import Attachments, { UploadButton } from '../../components/Attachments.jsx';
 import { AlertList } from '../Dashboard.jsx';
 import { VehicleFuelSummary, VehicleFuelTab } from '../fuel/VehicleFuel.jsx';
 import { VehicleMaintenanceSummary, VehicleMaintenanceTab } from '../maint/VehicleMaintenance.jsx';
+import TireMap from '../tires/TireMap.jsx';
 import { KmModal, StatusModal, DriverModal, CoupleModal } from './VehicleModals.jsx';
 import { fmtKm, fmtDate, fmtDateTime, fmtNum, relative } from '../../lib/format.js';
 import { VEHICLE_TYPES, VEHICLE_STATUS, FUEL_TYPES, TOWED_TYPES, TRACTOR_TYPES, labelOf } from '../../../shared/constants.js';
@@ -279,7 +280,7 @@ function Overview({ v, alerts, canEdit, openModal, reload }) {
 
       {!towed && (
         <div className="notice info" style={{ marginTop: 12 }}>
-          Pneus instalados e custos consolidados aparecerão aqui quando os módulos das próximas fases forem liberados.
+          Custos consolidados do veículo aparecerão aqui na fase 5. Os pneus instalados estão na aba Pneus.
         </div>
       )}
     </>
@@ -346,7 +347,7 @@ export default function VehicleDetail() {
     { key: 'geral', label: 'Visão geral' },
     !towed && { key: 'abastecimentos', label: 'Abastecimentos' },
     { key: 'manutencoes', label: 'Manutenções' },
-    { key: 'pneus', label: 'Pneus', soon: 4 },
+    { key: 'pneus', label: 'Pneus' },
     !towed && { key: 'motoristas', label: 'Motoristas' },
     { key: 'engates', label: 'Engates' },
     { key: 'documentos', label: 'Documentos' },
@@ -443,7 +444,7 @@ export default function VehicleDetail() {
       {tab === 'geral' && <Overview v={v} alerts={vehicleAlerts} canEdit={canEdit} openModal={setModal} reload={reload} />}
       {tab === 'abastecimentos' && <VehicleFuelTab vehicle={v} />}
       {tab === 'manutencoes' && <VehicleMaintenanceTab vehicle={v} />}
-      {tab === 'pneus' && <SoonTab phase={4} what="Mapa visual dos eixos com os pneus instalados, movimentações e recapagens." />}
+      {tab === 'pneus' && <TireMap vehicleId={v.id} />}
       {tab === 'custos' && <SoonTab phase={5} what="Custos do mês, do ano, por KM e total do veículo, por categoria." />}
       {tab === 'motoristas' && <DriversTab id={v.id} />}
       {tab === 'engates' && <CouplingsTab id={v.id} />}

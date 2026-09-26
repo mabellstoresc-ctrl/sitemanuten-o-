@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useFetch, useForm, useToast, Field, Select, IntInput, DecimalInput, Loading, ErrorBox, enterNav } from '../../components/ui.jsx';
 import { PageHead, Guard } from '../../components/common.jsx';
-import { VEHICLE_TYPES, FUEL_TYPES, VEHICLE_STATUS, TOWED_TYPES } from '../../../shared/constants.js';
+import { VEHICLE_TYPES, FUEL_TYPES, VEHICLE_STATUS, TOWED_TYPES, AXLE_LAYOUTS } from '../../../shared/constants.js';
 
 const EMPTY = {
   plate: '',
@@ -112,13 +112,8 @@ function Form({ initial, id }) {
               <Select value={v.status} onChange={set('status')} options={VEHICLE_STATUS.filter((s) => s.key !== 'inativo')} allowEmpty={false} />
             </Field>
           )}
-          <Field label="Configuração de eixos" error={E.axle_config} hint="Ex.: 6x2, 6x4, 3 eixos (usado no mapa de pneus)">
-            <input value={v.axle_config || ''} onChange={set('axle_config')} maxLength={40} list="axles" />
-            <datalist id="axles">
-              {['4x2', '6x2', '6x4', '8x2', '8x4', '2 eixos', '3 eixos', '4 eixos'].map((a) => (
-                <option key={a} value={a} />
-              ))}
-            </datalist>
+          <Field label="Configuração de eixos" error={E.axle_config} hint="Define o mapa de pneus">
+            <Select value={v.axle_config} onChange={set('axle_config')} options={AXLE_LAYOUTS} placeholder="Padrão pelo tipo" />
           </Field>
           <Field label="Observações" className="full" error={E.notes}>
             <textarea value={v.notes || ''} onChange={set('notes')} rows={3} maxLength={4000} />
