@@ -221,7 +221,11 @@ async function diagnostics() {
       out.aviso = 'A DATABASE_URL não está num formato válido (postgresql://usuario:senha@servidor:6543/postgres).';
     }
   }
+  const t0 = Date.now();
   try {
+    // Primeiro só testa a conexão (rápido), depois cria/atualiza as tabelas
+    await getPool().query('select 1');
+    out.conexao_ms = Date.now() - t0;
     await bootstrap();
     const { rows } = await getPool().query("select (select count(*) from users where is_master)::int as admin, (select count(*) from users)::int as usuarios");
     out.banco = 'conectado';
@@ -230,6 +234,12 @@ async function diagnostics() {
     if (!out.administrador_criado) out.aviso = 'Banco OK, mas o administrador não foi criado: confira a variável ADMIN_INITIAL_PASSWORD e faça um novo deploy.';
   } catch (err) {
     out.banco = 'erro';
+    out.tempo_ms = Date.now() - t0;
+    if (/timeout|terminated/i.test(String(err.message))) {
+      out.aviso = 'O banco não respondeu. Confira na DATABASE_URL o servidor (…pooler.supabase.com), a porta 6543 e se o projeto do Supabase não está pausado.';
+    } else if (/password authentication|Tenant or user not found/i.test(String(err.message))) {
+      out.aviso = 'O banco recusou o usuário/senha. Confira a senha dentro da DATABASE_URL (Supabase → Project Settings → Database para redefinir).';
+    }
     out.erro_banco = String(err.message || err).replace(/postgres(ql)?:\/\/[^\s]+/g, '[endereço oculto]').slice(0, 300);
   }
   out.ok = out.banco === 'conectado' && out.administrador_criado;
