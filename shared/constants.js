@@ -286,3 +286,77 @@ export function positionsFor(vehicle) {
 export function positionLabel(vehicle, code) {
   return positionsFor(vehicle).find((p) => p.code === code)?.label || code || '';
 }
+
+// ----- Fase 5: documentos, checklists, custos, relatórios -----
+export const DOCUMENT_OWNERS = [
+  { key: 'veiculo', label: 'Veículo' },
+  { key: 'motorista', label: 'Motorista' },
+  { key: 'empresa', label: 'Empresa' },
+];
+
+// owners: a quem o tipo de documento se aplica
+export const DOCUMENT_TYPES = [
+  { key: 'crlv', label: 'CRLV (licenciamento)', owners: ['veiculo'] },
+  { key: 'aet', label: 'AET (autorização especial de trânsito)', owners: ['veiculo'] },
+  { key: 'tacografo', label: 'Aferição do tacógrafo', owners: ['veiculo'] },
+  { key: 'seguro', label: 'Apólice de seguro', owners: ['veiculo', 'empresa'] },
+  { key: 'civ_cipp', label: 'CIV / CIPP', owners: ['veiculo'] },
+  { key: 'antt', label: 'RNTRC / ANTT', owners: ['empresa', 'veiculo'] },
+  { key: 'licenca', label: 'Licença (ambiental, sanitária…)', owners: ['empresa', 'veiculo'] },
+  { key: 'alvara', label: 'Alvará', owners: ['empresa'] },
+  { key: 'contrato', label: 'Contrato', owners: ['empresa', 'veiculo'] },
+  { key: 'aso', label: 'ASO (exame médico)', owners: ['motorista'] },
+  { key: 'toxicologico', label: 'Exame toxicológico', owners: ['motorista'] },
+  { key: 'curso', label: 'Curso / certificado (MOPP…)', owners: ['motorista'] },
+  { key: 'outros', label: 'Outros', owners: ['veiculo', 'motorista', 'empresa'] },
+];
+
+export const DOCUMENT_STATUS = [
+  { key: 'ativo', label: 'Vigente', tone: 'ok' },
+  { key: 'substituido', label: 'Substituído', tone: 'muted' },
+  { key: 'cancelado', label: 'Cancelado', tone: 'off' },
+];
+
+export const CHECKLIST_KINDS = [
+  { key: 'saida', label: 'Saída' },
+  { key: 'retorno', label: 'Retorno' },
+  { key: 'periodico', label: 'Periódico / inspeção' },
+  { key: 'outros', label: 'Outros' },
+];
+
+export const CHECKLIST_ANSWERS = [
+  { key: 'ok', label: 'OK', tone: 'ok' },
+  { key: 'nok', label: 'Com problema', tone: 'danger' },
+  { key: 'na', label: 'N/A', tone: 'muted' },
+];
+
+export const CHECKLIST_RESULTS = [
+  { key: 'ok', label: 'Aprovado', tone: 'ok' },
+  { key: 'problemas', label: 'Com problemas', tone: 'warn' },
+  { key: 'reprovado', label: 'Reprovado', tone: 'danger' },
+];
+
+// Lançamentos manuais de custo (os demais vêm dos módulos automaticamente)
+export const COST_CATEGORIES = [
+  { key: 'ipva', label: 'IPVA' },
+  { key: 'licenciamento', label: 'Licenciamento / taxas' },
+  { key: 'seguro', label: 'Seguro' },
+  { key: 'multa', label: 'Multa' },
+  { key: 'pedagio', label: 'Pedágio' },
+  { key: 'aet', label: 'AET' },
+  { key: 'rastreamento', label: 'Rastreamento' },
+  { key: 'lavagem', label: 'Lavagem' },
+  { key: 'financiamento', label: 'Financiamento / parcela' },
+  { key: 'outros', label: 'Outros' },
+];
+
+// Origem de cada linha no consolidado de custos
+export const COST_SOURCES = [
+  { key: 'combustivel', label: 'Combustível' },
+  { key: 'arla', label: 'ARLA 32' },
+  { key: 'manutencao', label: 'Manutenção' },
+  { key: 'pneus', label: 'Pneus (compra)' },
+  { key: 'recapagem', label: 'Recapagem' },
+  { key: 'documentos', label: 'Documentos' },
+  { key: 'avulso', label: 'Lançamentos avulsos' },
+];

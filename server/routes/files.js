@@ -15,6 +15,9 @@ export const ENTITIES = {
   maintenance: { table: 'maintenances', module: 'manutencoes', label: 'performed_on' },
   service_order: { table: 'service_orders', module: 'manutencoes', label: 'number' },
   tire: { table: 'tires', module: 'pneus', label: 'code' },
+  document: { table: 'documents', module: 'documentos', label: 'number' },
+  checklist: { table: 'checklists', module: 'checklists', label: 'number' },
+  cost: { table: 'costs', module: 'custos', label: 'description' },
 };
 
 const CATEGORIES = ['foto', 'documento', 'comprovante', 'nota_fiscal', 'outros'];

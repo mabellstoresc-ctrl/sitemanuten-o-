@@ -13,6 +13,12 @@ import miscRoutes from './routes/misc.js';
 import fuelRoutes from './routes/fuel.js';
 import maintenanceRoutes from './routes/maintenance.js';
 import tireRoutes from './routes/tires.js';
+import documentRoutes from './routes/documents.js';
+import checklistRoutes from './routes/checklists.js';
+import costRoutes from './routes/costs.js';
+import reportRoutes from './routes/reports.js';
+import appointmentRoutes from './routes/appointments.js';
+import adminRoutes from './routes/admin.js';
 
 // ---------- Roteador ----------
 const routes = [];
@@ -37,7 +43,25 @@ const r = {
   del: (p, h, o) => add('DELETE', p, h, o),
 };
 
-for (const register of [authRoutes, userRoutes, fuelRoutes, maintenanceRoutes, tireRoutes, vehicleRoutes, driverRoutes, fileRoutes, miscRoutes]) register(r);
+for (const register of [
+  authRoutes,
+  userRoutes,
+  fuelRoutes,
+  maintenanceRoutes,
+  tireRoutes,
+  documentRoutes,
+  checklistRoutes,
+  costRoutes,
+  reportRoutes,
+  appointmentRoutes,
+  adminRoutes,
+  vehicleRoutes,
+  driverRoutes,
+  fileRoutes,
+  miscRoutes,
+]) {
+  register(r);
+}
 
 function match(method, path) {
   let pathMatched = false;
@@ -188,7 +212,7 @@ export async function handle(req) {
     if (err?.code === '23505') {
       return json({ error: duplicateMessage(err), code: 'DUPLICADO' }, 409);
     }
-    if (err?.code === '22P02') {
+    if (err?.code === '22P02' || err?.code === '22008' || err?.code === '22007') {
       return json({ error: 'Identificador ou valor inválido.' }, 400);
     }
     if (err?.code === '23503') {
@@ -266,5 +290,6 @@ function duplicateMessage(err) {
   if (c.includes('tires_position')) return 'Esta posição já tem um pneu.';
   if (c.includes('tire_retreads_open')) return 'Este pneu já está na recapagem.';
   if (c.includes('fuelings_order')) return 'Esta ordem de abastecimento já foi utilizada em outro abastecimento.';
+  if (c.includes('document_vehicles')) return 'Implemento repetido na lista.';
   return 'Registro duplicado.';
 }

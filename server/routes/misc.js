@@ -2,10 +2,11 @@ import { badRequest } from '../http.js';
 import { can, requirePerm } from '../permissions.js';
 import { audit, diff } from '../audit.js';
 import { validate } from '../validate.js';
-import { DEFAULT_SETTINGS, TOWED_TYPES, CONSUMPTION_DEVIATION } from '../../shared/constants.js';
 import { AVG_SQL } from '../fuel.js';
 import { maintenancePlans } from '../maintenance.js';
 import { tiresNeedingAttention } from './tires.js';
+import { costSummary } from '../costs.js';
+import { DEFAULT_SETTINGS, TOWED_TYPES, CONSUMPTION_DEVIATION, DOCUMENT_TYPES, labelOf } from '../../shared/constants.js';
 
 async function getSettings(db) {
   const { rows } = await db.query('select key, value from settings');
@@ -162,6 +163,90 @@ export async function computeAlerts(db, user) {
     }
   }
 
+  if (can(user, 'documentos', 'ver')) {
+    const { rows } = await db.query(
+      `select d.id, d.type, d.number, d.issuer, d.expires_on, (d.expires_on - (now() at time zone 'America/Sao_Paulo')::date) as days,
+              v.plate, dr.full_name as driver_name, d.owner
+         from documents d left join vehicles v on v.id = d.vehicle_id left join drivers dr on dr.id = d.driver_id
+        where d.status = 'ativo' and d.expires_on <= (now() at time zone 'America/Sao_Paulo')::date + $1::int
+          and (v.id is null or v.status <> 'inativo')
+        order by d.expires_on`,
+      [a.documento_dias],
+    );
+    for (const d of rows) {
+      const what = `${labelOf(DOCUMENT_TYPES, d.type).replace(/ \(.*\)$/, '')}${d.issuer ? ` ${d.issuer}` : ''}${d.number ? ` nº ${d.number}` : ''}`;
+      const who = d.plate ? `Veículo ${d.plate}` : d.driver_name ? `Motorista ${d.driver_name}` : 'Empresa';
+      alerts.push({
+        level: d.days < 0 || d.days <= 7 ? 'urgente' : 'atencao',
+        kind: 'documento',
+        title: `${who} — ${what} ${d.days < 0 ? `VENCIDO há ${-d.days} dia(s)` : d.days === 0 ? 'vence HOJE' : `vence em ${d.days} dia(s)`}`,
+        link: `/documentos/${d.id}`,
+        date: d.expires_on,
+      });
+    }
+    // CRLV de exercício anterior (licenciamento do ano ainda não registrado)
+    const { rows: crlv } = await db.query(
+      `select d.id, d.exercise_year, v.plate from documents d join vehicles v on v.id = d.vehicle_id
+        where d.type = 'crlv' and d.status = 'ativo' and v.status <> 'inativo'
+          and d.exercise_year < extract(year from (now() at time zone 'America/Sao_Paulo'))::int
+        order by v.plate`,
+    );
+    for (const d of crlv) {
+      alerts.push({
+        level: 'atencao',
+        kind: 'documento',
+        title: `Veículo ${d.plate} — CRLV do exercício ${d.exercise_year}: confira o licenciamento do ano e cadastre o CRLV novo`,
+        link: `/documentos/${d.id}`,
+      });
+    }
+    // Veículos sem CRLV (só depois que a empresa começou a cadastrar CRLVs)
+    const { rows: noCrlv } = await db.query(
+      `select v.id, v.plate from vehicles v
+        where v.status <> 'inativo' and exists (select 1 from documents where type = 'crlv')
+          and not exists (select 1 from documents d where d.vehicle_id = v.id and d.type = 'crlv' and d.status = 'ativo')
+        order by v.plate`,
+    );
+    for (const v of noCrlv) {
+      alerts.push({ level: 'info', kind: 'documento', title: `Veículo ${v.plate} sem CRLV cadastrado`, link: `/veiculos/${v.id}?aba=documentos` });
+    }
+    // Implemento engatado que não consta na AET vigente do cavalo
+    const { rows: aet } = await db.query(
+      `select t.id as tractor_id, t.plate as tractor, r.plate as trailer
+         from vehicle_couplings vc join vehicles t on t.id = vc.tractor_id join vehicles r on r.id = vc.trailer_id
+        where vc.end_at is null
+          and exists (select 1 from documents d where d.type = 'aet' and d.status = 'ativo' and d.vehicle_id = t.id
+                         and (d.expires_on is null or d.expires_on >= (now() at time zone 'America/Sao_Paulo')::date))
+          and not exists (select 1 from documents d join document_vehicles dv on dv.document_id = d.id
+                           where d.type = 'aet' and d.status = 'ativo' and d.vehicle_id = t.id and dv.vehicle_id = r.id
+                             and (d.expires_on is null or d.expires_on >= (now() at time zone 'America/Sao_Paulo')::date))`,
+    );
+    for (const x of aet) {
+      alerts.push({
+        level: 'atencao',
+        kind: 'aet',
+        title: `Conjunto ${x.tractor} + ${x.trailer}: o implemento ${x.trailer} não consta na AET vigente do cavalo`,
+        link: `/veiculos/${x.tractor_id}?aba=documentos`,
+      });
+    }
+  }
+
+  if (can(user, 'checklists', 'ver')) {
+    const { rows } = await db.query(
+      `select c.id, c.number, c.result, c.nok_count, v.plate from checklists c join vehicles v on v.id = c.vehicle_id
+        where c.status = 'ativo' and c.result <> 'ok' and c.service_order_id is null and c.performed_at > now() - interval '30 days'
+          and not exists (select 1 from checklists n where n.vehicle_id = c.vehicle_id and n.status = 'ativo' and n.performed_at > c.performed_at)
+        order by c.performed_at desc`,
+    );
+    for (const c of rows) {
+      alerts.push({
+        level: c.result === 'reprovado' ? 'urgente' : 'atencao',
+        kind: 'checklist',
+        title: `Veículo ${c.plate} — checklist nº ${c.number} ${c.result === 'reprovado' ? 'REPROVADO' : 'com problemas'} (${c.nok_count} item(ns)) sem OS aberta`,
+        link: `/checklists/${c.id}`,
+      });
+    }
+  }
+
   const order = { urgente: 0, atencao: 1, info: 2 };
   alerts.sort((x, y) => order[x.level] - order[y.level]);
   return alerts;
@@ -244,8 +329,30 @@ export default function (r) {
       out.pneus = { ...tr[0], atencao: (await tiresNeedingAttention(db)).length };
     }
 
+    if (can(ctx.user, 'custos', 'ver')) {
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+      const m = await costSummary(db, { from: `${today.slice(0, 7)}-01` });
+      out.custos_mes = { total: m.total, cost_per_km: m.cost_per_km, by_category: m.by_category.slice(0, 5) };
+    }
+    if (can(ctx.user, 'checklists', 'ver')) {
+      const { rows: ck } = await db.query(
+        `select count(*) filter (where performed_at >= (now() at time zone 'America/Sao_Paulo')::date::timestamp at time zone 'America/Sao_Paulo')::int as hoje,
+                count(*) filter (where result <> 'ok' and service_order_id is null and performed_at > now() - interval '30 days')::int as pendentes
+           from checklists where status = 'ativo'`,
+      );
+      out.checklists = ck[0];
+    }
+
     const alerts = await computeAlerts(db, ctx.user);
     out.alerts = alerts;
+    if (can(ctx.user, 'documentos', 'ver')) {
+      const docAlerts = alerts.filter((x) => x.kind === 'documento' && x.date);
+      out.documentos = {
+        vencidos: docAlerts.filter((x) => x.title.includes('VENCIDO')).length,
+        vencendo: docAlerts.filter((x) => !x.title.includes('VENCIDO')).length,
+        aet: alerts.filter((x) => x.kind === 'aet').length,
+      };
+    }
     out.cnh_alertas = alerts.filter((a) => a.kind === 'cnh' && a.level !== 'info').length;
 
     if (can(ctx.user, 'veiculos', 'ver')) {
@@ -338,6 +445,16 @@ export default function (r) {
         for (const o of rows) {
           results.push({ kind: 'ordem abast.', id: o.id, title: `Ordem nº ${o.number}`, subtitle: `${o.plate} · ${o.status}`, link: `/abastecimentos/ordens/${o.id}` });
         }
+      }
+    }
+    if (can(ctx.user, 'documentos', 'ver') && q.length >= 3) {
+      const { rows } = await ctx.db.query(
+        `select d.id, d.type, d.number, d.issuer, d.expires_on, v.plate from documents d left join vehicles v on v.id = d.vehicle_id
+          where d.status = 'ativo' and d.number ilike $1 order by d.expires_on desc nulls last limit 5`,
+        [like],
+      );
+      for (const d of rows) {
+        results.push({ kind: 'documento', id: d.id, title: `${labelOf(DOCUMENT_TYPES, d.type).replace(/ \(.*\)$/, '')} nº ${d.number}`, subtitle: [d.plate, d.issuer].filter(Boolean).join(' · '), link: `/documentos/${d.id}` });
       }
     }
     return { results };

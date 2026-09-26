@@ -1,6 +1,6 @@
 import { validate } from '../validate.js';
 import { badRequest, notFound } from '../http.js';
-import { requirePerm, requireAny } from '../permissions.js';
+import { requirePerm, requireAny, can } from '../permissions.js';
 import { audit, diff, snapshot, vehicleEvent } from '../audit.js';
 import { registerKm, invalidateReading, syncCurrentKm } from '../km.js';
 import { maintenancePlans, oilStatus } from '../maintenance.js';
@@ -12,6 +12,7 @@ import {
   SERVICE_ORDER_OPEN,
   OIL_CATEGORY,
   VEHICLE_STATUS,
+  DOCUMENT_TYPES,
   labelOf,
 } from '../../shared/constants.js';
 
@@ -307,6 +308,47 @@ export default function (r) {
         maintenance_id: m.id,
       });
     }
+    // Compromissos agendados direto no calendário (pendentes atrasados aparecem sempre)
+    const { rows: ap } = await ctx.db.query(
+      `select a.id, a.title, a.scheduled_on, a.notes, a.done_at, v.id as vehicle_id, v.plate
+         from appointments a left join vehicles v on v.id = a.vehicle_id
+        where a.cancelled_at is null and (a.scheduled_on between $1 and $2 or (a.done_at is null and a.scheduled_on < $3))`,
+      [from, to, today],
+    );
+    for (const a of ap) {
+      items.push({
+        kind: 'agenda',
+        date: a.scheduled_on,
+        state: a.done_at ? 'realizada' : a.scheduled_on < today ? 'vencida' : 'proxima',
+        vehicle_id: a.vehicle_id,
+        plate: a.plate,
+        title: a.title,
+        detail: a.notes,
+        appointment_id: a.id,
+        done: Boolean(a.done_at),
+      });
+    }
+    // Vencimento de documentos
+    if (can(ctx.user, 'documentos', 'ver')) {
+      const { rows: docs } = await ctx.db.query(
+        `select d.id, d.type, d.number, d.issuer, d.expires_on, v.id as vehicle_id, v.plate, dr.full_name as driver_name
+           from documents d left join vehicles v on v.id = d.vehicle_id left join drivers dr on dr.id = d.driver_id
+          where d.status = 'ativo' and d.expires_on between $1 and $2`,
+        [from, to],
+      );
+      for (const d of docs) {
+        items.push({
+          kind: 'documento',
+          date: d.expires_on,
+          state: d.expires_on < today ? 'vencida' : 'proxima',
+          vehicle_id: d.vehicle_id,
+          plate: d.plate,
+          title: `Vence: ${labelOf(DOCUMENT_TYPES, d.type)}${d.number ? ` nº ${d.number}` : ''}`,
+          detail: [d.issuer, d.driver_name].filter(Boolean).join(' · '),
+          document_id: d.id,
+        });
+      }
+    }
     items.sort((a, b) => String(a.date || '0000').localeCompare(String(b.date || '0000')));
     return { items };
   });
@@ -570,7 +612,7 @@ export default function (r) {
     requirePerm(ctx.user, 'manutencoes', 'cadastrar');
     const d = validate(ctx.body, SO_FIELDS);
     d.type = d.type || 'corretiva';
-    const flags = validate(ctx.body, { ...FLAGS, set_vehicle_status: { type: 'bool' } });
+    const flags = validate(ctx.body, { ...FLAGS, set_vehicle_status: { type: 'bool' }, checklist_id: { type: 'uuid', label: 'Checklist' } });
     if (d.due_date && d.due_date < d.opened_on) throw badRequest('A previsão de conclusão não pode ser antes da abertura.');
     const out = await ctx.tx(async (c) => {
       const v = await lockVehicle(c, d.vehicle_id);
@@ -614,6 +656,14 @@ export default function (r) {
         refId: so.id,
       });
       await audit(c, ctx, { module: 'manutencoes', action: 'criar', entity: 'ordem_servico', entityId: so.id, label: `OS nº ${so.number} · ${v.plate}`, changes: snapshot(d) });
+      // OS aberta a partir de um checklist com problemas
+      if (flags.checklist_id) {
+        const { rowCount } = await c.query(
+          `update checklists set service_order_id = $2 where id = $1 and vehicle_id = $3 and status = 'ativo' and service_order_id is null`,
+          [flags.checklist_id, so.id, v.id],
+        );
+        if (!rowCount) throw badRequest('Checklist inválido ou já vinculado a outra OS.');
+      }
       return so;
     });
     return out;

@@ -73,6 +73,13 @@ function enrich(t, cfg) {
   return t;
 }
 
+/** Lista de pneus com KM calculado (usada em relatórios). */
+export async function listTires(db, where = '', params = []) {
+  const cfg = await alertSettings(db);
+  const { rows } = await db.query(`${TIRE_SELECT} ${where} order by v.plate nulls last, t.position, t.code`, params);
+  return rows.map((t) => enrich(t, cfg));
+}
+
 export async function tiresNeedingAttention(db) {
   const cfg = await alertSettings(db);
   const { rows } = await db.query(`${TIRE_SELECT} where t.status = 'em_uso'`);

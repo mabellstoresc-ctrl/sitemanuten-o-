@@ -3,6 +3,7 @@ import { badRequest, notFound, conflict } from '../http.js';
 import { requirePerm, requireAny } from '../permissions.js';
 import { audit, diff, snapshot, vehicleEvent } from '../audit.js';
 import { registerKm } from '../km.js';
+import { aetCheck } from './documents.js';
 import {
   VEHICLE_TYPES,
   FUEL_TYPES,
@@ -28,6 +29,11 @@ const FIELDS = {
   tank_capacity: { type: 'number', min: 0, max: 5000, label: 'Capacidade do tanque' },
   acquisition_date: { type: 'date', label: 'Data de aquisição' },
   axle_config: { type: 'string', max: 40, label: 'Configuração de eixos' },
+  color: { type: 'string', max: 30, label: 'Cor', upper: true },
+  body_type: { type: 'string', max: 60, label: 'Carroceria', upper: true },
+  pbt: { type: 'number', min: 0, max: 200, label: 'PBT (t)' },
+  cmt: { type: 'number', min: 0, max: 200, label: 'CMT (t)' },
+  capacity: { type: 'number', min: 0, max: 200, label: 'Capacidade de carga (t)' },
   notes: { type: 'text', max: 4000, label: 'Observações' },
 };
 const EDITABLE = Object.keys(FIELDS);
@@ -399,7 +405,7 @@ export default function (r) {
   r.post('/vehicles/:id/couple', async (ctx) => {
     requirePerm(ctx.user, 'veiculos', 'editar');
     const { trailer_id } = validate(ctx.body, { trailer_id: { type: 'uuid', required: true, label: 'Implemento' } });
-    await ctx.tx(async (c) => {
+    const { tractor, trailer } = await ctx.tx(async (c) => {
       const tractor = await lockVehicle(c, ctx.params.id);
       const trailer = await lockVehicle(c, trailer_id);
       if (!TRACTOR_TYPES.includes(tractor.type)) throw badRequest('Somente cavalos mecânicos e caminhões podem engatar implementos.');
@@ -430,8 +436,14 @@ export default function (r) {
         label: tractor.plate,
         changes: [{ campo: 'implemento', anterior: null, novo: trailer.plate }],
       });
+      return { tractor, trailer };
     });
-    return { ok: true };
+    // Aviso (não bloqueia): o cavalo tem AET e este implemento não está autorizado nela
+    const check = await aetCheck(ctx.db, tractor.id, trailer.id);
+    const aetWarning = check.covered
+      ? null
+      : `${trailer.plate} não consta na AET vigente de ${tractor.plate}${check.missing.length ? ` (${check.missing.join('; ')})` : ''}. Confira antes de rodar em rota que exige AET.`;
+    return { ok: true, aet_warning: aetWarning };
   });
 
   r.post('/vehicles/:id/uncouple', async (ctx) => {
