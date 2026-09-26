@@ -124,6 +124,10 @@ export async function handle(req) {
     if (path === '/health') {
       return json({ ok: true });
     }
+    // Diagnóstico da instalação (não expõe senhas nem chaves): /api/diagnostico
+    if (path === '/diagnostico') {
+      return json(await diagnostics());
+    }
 
     await bootstrap();
 
@@ -194,6 +198,42 @@ export async function handle(req) {
     console.error('[api] erro', method, path, err);
     return json({ error: 'Erro interno. Tente novamente.' }, 500);
   }
+}
+
+async function diagnostics() {
+  const env = (k) => Boolean(process.env[k] && process.env[k].trim());
+  const out = {
+    variaveis: {
+      DATABASE_URL: env('DATABASE_URL'),
+      SUPABASE_URL: env('SUPABASE_URL'),
+      SUPABASE_SERVICE_KEY: env('SUPABASE_SERVICE_KEY'),
+      ADMIN_INITIAL_PASSWORD: env('ADMIN_INITIAL_PASSWORD'),
+    },
+  };
+  const raw = process.env.DATABASE_URL?.trim();
+  if (raw) {
+    try {
+      const u = new URL(raw);
+      out.banco_endereco = { servidor: u.hostname, porta: u.port, usuario: decodeURIComponent(u.username), tem_senha: Boolean(u.password) };
+      if (/[[\]]/.test(raw)) out.aviso = 'A DATABASE_URL contém colchetes [ ]. Remova-os (eles só marcavam onde vai a senha).';
+      else if ((raw.match(/@/g) || []).length > 1) out.aviso = 'A DATABASE_URL tem mais de um @. Se a senha tem @, escreva %40 no lugar dele.';
+    } catch {
+      out.aviso = 'A DATABASE_URL não está num formato válido (postgresql://usuario:senha@servidor:6543/postgres).';
+    }
+  }
+  try {
+    await bootstrap();
+    const { rows } = await getPool().query("select (select count(*) from users where is_master)::int as admin, (select count(*) from users)::int as usuarios");
+    out.banco = 'conectado';
+    out.administrador_criado = rows[0].admin > 0;
+    out.usuarios = rows[0].usuarios;
+    if (!out.administrador_criado) out.aviso = 'Banco OK, mas o administrador não foi criado: confira a variável ADMIN_INITIAL_PASSWORD e faça um novo deploy.';
+  } catch (err) {
+    out.banco = 'erro';
+    out.erro_banco = String(err.message || err).replace(/postgres(ql)?:\/\/[^\s]+/g, '[endereço oculto]').slice(0, 300);
+  }
+  out.ok = out.banco === 'conectado' && out.administrador_criado;
+  return out;
 }
 
 function duplicateMessage(err) {
