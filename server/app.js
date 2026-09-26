@@ -115,7 +115,9 @@ export async function handle(req) {
     ip: clientIp(req),
     ua: (req.headers.get('user-agent') || '').slice(0, 300),
     query: Object.fromEntries(url.searchParams),
-    db: getPool(),
+    get db() {
+      return getPool();
+    },
     tx,
     cookies: [],
   };
@@ -194,6 +196,10 @@ export async function handle(req) {
         { error: 'Este registro possui outros registros vinculados. Use Inativar/Cancelar em vez de excluir.', code: 'VINCULADO' },
         409,
       );
+    }
+    if (/^DATABASE_URL|ENOTFOUND|ECONNREFUSED|timeout|password authentication|Tenant or user not found/i.test(String(err?.message))) {
+      console.error('[api] banco indisponível', err.message);
+      return json({ error: 'Sem conexão com o banco de dados. Abra /api/diagnostico para ver o motivo.', code: 'BANCO_INDISPONIVEL' }, 503);
     }
     console.error('[api] erro', method, path, err);
     return json({ error: 'Erro interno. Tente novamente.' }, 500);

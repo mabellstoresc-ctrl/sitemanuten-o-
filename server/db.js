@@ -12,7 +12,15 @@ let pool;
 function connectionConfig() {
   const raw = process.env.DATABASE_URL?.trim();
   if (!raw) throw new Error('DATABASE_URL não configurada');
-  const url = new URL(raw);
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error(
+      'DATABASE_URL em formato inválido. O formato é postgresql://usuario:senha@servidor:6543/postgres — sem colchetes, sem espaços, e se a senha tiver @ # / ? % use uma senha só com letras e números.',
+    );
+  }
+  if (!/^postgres(ql)?:$/.test(url.protocol)) throw new Error('DATABASE_URL deve começar com postgresql://');
   // O SSL é configurado abaixo; sslmode na URL faria o driver exigir certificado público.
   url.searchParams.delete('sslmode');
   const local = ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
