@@ -10,7 +10,7 @@ types.setTypeParser(1082, (v) => v);
 let pool;
 
 function connectionConfig() {
-  const raw = process.env.DATABASE_URL;
+  const raw = process.env.DATABASE_URL?.trim();
   if (!raw) throw new Error('DATABASE_URL não configurada');
   const url = new URL(raw);
   // O SSL é configurado abaixo; sslmode na URL faria o driver exigir certificado público.

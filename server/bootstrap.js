@@ -50,7 +50,7 @@ async function run() {
 async function ensureMaster(c) {
   const { rows } = await c.query('select id from users where is_master');
   if (!rows.length) {
-    const initial = process.env.ADMIN_INITIAL_PASSWORD;
+    const initial = process.env.ADMIN_INITIAL_PASSWORD?.trim();
     if (!initial) {
       console.error('[bootstrap] ADMIN_INITIAL_PASSWORD não configurada: Administrador Principal não criado.');
       return;
@@ -72,7 +72,7 @@ async function ensureMaster(c) {
 
   // Recuperação de senha do Administrador Principal via variável de ambiente.
   // Aplicada uma única vez para cada valor diferente de ADMIN_RESET_PASSWORD.
-  const reset = process.env.ADMIN_RESET_PASSWORD;
+  const reset = process.env.ADMIN_RESET_PASSWORD?.trim();
   if (reset) {
     const marker = hashToken(`reset:${reset}`);
     const { rows: done } = await c.query("select 1 from settings where key = 'admin_reset_aplicado' and value = $1", [
