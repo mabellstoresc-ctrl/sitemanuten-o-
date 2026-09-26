@@ -120,6 +120,16 @@ Os outros usuários que esquecerem a senha devem falar com o administrador, que 
 - **Inspeção:** sulco, pressão e estado. Geram alertas o sulco abaixo do mínimo, o pneu sem inspeção há mais dias que o configurado e o pneu com 90% da vida útil.
 - Telas: 501 Instalados, 502 Estoque, 503 Movimentações, 504 Recapagens e 505 Histórico. Pneus também aparecem na pesquisa global.
 
+## Documentos, checklists, custos e relatórios (fase 5)
+
+- **Documentos (701):** CRLV, AET, tacógrafo, seguro, CIV/CIPP, RNTRC/ANTT, licenças, alvará, contratos e, dos motoristas, ASO, toxicológico e cursos. Cada documento tem número, órgão, emissão, validade, valor pago e o PDF/foto anexado. O documento novo substitui o anterior (fica no histórico). A AET é por órgão, então um cavalo pode ter a do DNIT e a do DER-SP ao mesmo tempo.
+- **Alertas de documentos:** vencidos, vencendo (dias configuráveis), CRLV de exercício anterior e veículo sem CRLV. A **AET guarda os implementos autorizados**. Engatar um implemento que não está na AET vigente do cavalo gera aviso e alerta.
+- **Importar CRLV/AET (702):** selecione vários PDFs de uma vez. O sistema lê o **CRLV digital** (placa, RENAVAM, chassi, ano, marca/modelo, eixos, PBT, CMT, cor, carroceria) e cadastra os veículos que faltam. Também lê a **AET do DNIT e do DER** (número, validade, PBTC, conjunto e placas autorizadas). O PDF fica anexado ao documento. PDFs escaneados (foto) não são lidos automaticamente: cadastre à mão. O cadastro de veículo também tem o botão "Preencher pelo CRLV (PDF)".
+- **Checklists (601):** modelos editáveis (603) com itens agrupados e itens críticos. Já vêm dois modelos: saída de cavalo/caminhão e de carreta. No celular, cada item tem os botões OK / Problema / N/A. Um item crítico com problema **reprova** o checklist. O KM informado atualiza o veículo. Os itens com problema viram OS com um clique ("Abrir OS com os problemas"). Checklist com problema e sem OS gera alerta.
+- **Custos (801):** soma sozinha combustível, ARLA, manutenções, compra de pneus, recapagens e valor pago em documentos. IPVA, seguro, multa, pedágio, rastreamento e outros entram como **lançamentos avulsos** (por veículo ou gerais). Mostra por categoria, por mês, por veículo e o **custo por KM** (pelo KM rodado no período). Cada veículo tem a aba "Custos".
+- **Relatórios (851):** frota, KM rodado, abastecimentos, consumo, manutenções, OS, próximas manutenções, pneus, recapagens, custo por veículo, lançamentos de custo, documentos, checklists e motoristas/CNH. Cada um tem filtros, total no rodapé, **Imprimir / PDF** (paisagem, com logo) e **Excel**. O usuário só vê os relatórios dos módulos que tem permissão.
+- **Agenda:** no Calendário (405), o botão "Agendar" (ou clique no número do dia) marca compromissos como vistoria, revisão na concessionária ou renovação. O calendário também mostra o vencimento dos documentos.
+
 ## Datas e fuso horário
 
 Todas as datas calculadas pelo servidor (vencimentos, "hoje", mês atual) seguem o horário de Brasília, mesmo com o banco de dados em UTC.
@@ -144,7 +154,7 @@ Os dados ficam no PostgreSQL do Supabase. Recomendações:
   ```
 - No plano gratuito, o Supabase pausa o projeto após 7 dias sem nenhum acesso. Com uso diário isso não acontece.
 
-A fase 5 adiciona exportação de backup pelo próprio sistema.
+**Pelo sistema:** em Configurações (990), o Administrador Principal baixa o **backup completo** (arquivo JSON com todos os registros, sem senhas). Recomendado: uma vez por mês, guardado fora do computador. Fotos e PDFs anexados ficam no Supabase Storage (bucket `arquivos`).
 
 ## Atalhos (estilo SSW)
 
@@ -187,4 +197,4 @@ tests/                      testes da API
 2. **Abastecimentos** (entregue): ordens de abastecimento, médias de consumo e gráficos.
 3. **Manutenção** (entregue): ordens de serviço, preventivas/corretivas, troca de óleo, próximas manutenções, calendário e alertas.
 4. **Pneus** (entregue): cadastro, mapa de eixos, movimentações, recapagens, inspeções e histórico.
-5. Checklists, documentos com vencimento, custos, relatórios PDF/Excel e backup pelo sistema.
+5. **Controle** (entregue): checklists, documentos com vencimento (CRLV/AET com leitura do PDF), custos, relatórios PDF/Excel, agenda e backup pelo sistema.

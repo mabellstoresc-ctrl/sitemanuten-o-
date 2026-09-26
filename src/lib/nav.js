@@ -58,7 +58,7 @@ export const MENU = [
       { code: '402', label: 'Preventivas', path: '/manutencao/preventivas', module: 'manutencoes' },
       { code: '403', label: 'Corretivas', path: '/manutencao/corretivas', module: 'manutencoes' },
       { code: '404', label: 'Trocas de óleo', path: '/manutencao/oleo', module: 'manutencoes' },
-      { code: '405', label: 'Calendário', path: '/manutencao/calendario', module: 'manutencoes' },
+      { code: '405', label: 'Calendário / agenda', path: '/manutencao/calendario', module: 'manutencoes' },
     ],
   },
   {
@@ -74,10 +74,13 @@ export const MENU = [
   {
     group: 'Controle',
     items: [
-      { code: '601', label: 'Checklists', path: '/checklists', icon: ClipboardCheck, module: 'checklists', phase: 5 },
-      { code: '701', label: 'Documentos', path: '/documentos', icon: FileText, module: 'documentos', phase: 5 },
-      { code: '801', label: 'Custos', path: '/custos', icon: Wallet, module: 'custos', phase: 5 },
-      { code: '851', label: 'Relatórios', path: '/relatorios', icon: ChartColumn, module: 'relatorios', phase: 5 },
+      { code: '601', label: 'Checklists', path: '/checklists', icon: ClipboardCheck, module: 'checklists' },
+      { code: '602', label: 'Novo checklist', path: '/checklists/novo', module: 'checklists', action: 'cadastrar', hidden: true },
+      { code: '603', label: 'Modelos de checklist', path: '/checklists/modelos', module: 'checklists', hidden: true },
+      { code: '701', label: 'Documentos', path: '/documentos', icon: FileText, module: 'documentos' },
+      { code: '702', label: 'Importar CRLV/AET', path: '/documentos/importar', module: 'documentos', action: 'cadastrar', hidden: true },
+      { code: '801', label: 'Custos', path: '/custos', icon: Wallet, module: 'custos' },
+      { code: '851', label: 'Relatórios', path: '/relatorios', icon: ChartColumn, module: 'relatorios' },
     ],
   },
   {

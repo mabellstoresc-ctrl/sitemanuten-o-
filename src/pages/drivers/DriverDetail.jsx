@@ -5,7 +5,7 @@ import { useAuth } from '../../auth.jsx';
 import { api } from '../../api.js';
 import { useFetch, Loading, ErrorBox, StatusBadge, Tabs, Dl, DataTable, useToast, useDialog, Modal, Field, Select } from '../../components/ui.jsx';
 import { PageHead } from '../../components/common.jsx';
-import Attachments from '../../components/Attachments.jsx';
+import { DocumentsPanel } from '../docs/Documents.jsx';
 import { CnhBadge } from './DriverList.jsx';
 import { fmtCpf, fmtDate, fmtDateTime, fmtKm, todayISO } from '../../lib/format.js';
 import { DRIVER_STATUS, OCCURRENCE_TYPES, labelOf } from '../../../shared/constants.js';
@@ -366,7 +366,7 @@ export default function DriverDetail() {
       {tab === 'veiculos' && <VehiclesTab id={d.id} />}
       {tab === 'ocorrencias' && <OccurrencesTab driver={d} canEdit={canEdit} />}
       {tab === 'abastecimentos' && <DriverFuelTab driverId={d.id} />}
-      {tab === 'documentos' && <Attachments entity="driver" entityId={d.id} canEdit={canEdit} />}
+      {tab === 'documentos' && <DocumentsPanel driverId={d.id} fileEntity="driver" canEditFiles={canEdit} />}
       {tab === 'historico' && <AuditTab id={d.id} />}
 
       {modal === 'status' && (

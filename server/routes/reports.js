@@ -439,7 +439,7 @@ const REPORTS = [
           col('who', 'Veículo / motorista'),
           col('number', 'Número'),
           col('issuer', 'Órgão'),
-          col('exercise_year', 'Exercício', 'int'),
+          col('exercise_year', 'Exercício'),
           col('expires_on', 'Vencimento', 'date'),
           col('days_left', 'Dias', 'int'),
           col('authorized', 'Implementos autorizados'),

@@ -30,6 +30,11 @@ import OilChanges from './pages/maint/OilChanges.jsx';
 import Calendar from './pages/maint/Calendar.jsx';
 import { ServiceOrderList, ServiceOrderDetail } from './pages/maint/ServiceOrders.jsx';
 import { InstalledTires, TireStock, TireMovements, TireRetreads, TireHistoryList, TireForm, TireDetail } from './pages/tires/TirePages.jsx';
+import { DocumentList, DocumentDetail } from './pages/docs/Documents.jsx';
+import ImportDocs from './pages/docs/ImportDocs.jsx';
+import { ChecklistList, ChecklistForm, ChecklistDetail, ChecklistTemplates } from './pages/checklists/Checklists.jsx';
+import Costs from './pages/costs/Costs.jsx';
+import Reports from './pages/Reports.jsx';
 import { ALL_ITEMS } from './lib/nav.js';
 
 function Home() {
@@ -90,6 +95,18 @@ function AppRoutes() {
         <Route path="/pneus/novo" element={<TireForm />} />
         <Route path="/pneus/:id" element={<TireDetail />} />
         <Route path="/pneus/:id/editar" element={<TireForm />} />
+
+        <Route path="/checklists" element={<ChecklistList />} />
+        <Route path="/checklists/novo" element={<ChecklistForm />} />
+        <Route path="/checklists/modelos" element={<ChecklistTemplates />} />
+        <Route path="/checklists/:id" element={<ChecklistDetail />} />
+
+        <Route path="/documentos" element={<DocumentList />} />
+        <Route path="/documentos/importar" element={<ImportDocs />} />
+        <Route path="/documentos/:id" element={<Guard anyOf={['documentos', 'veiculos', 'motoristas']}><DocumentDetail /></Guard>} />
+
+        <Route path="/custos" element={<Costs />} />
+        <Route path="/relatorios" element={<Reports />} />
 
         <Route path="/admin/usuarios" element={<Users />} />
         <Route path="/admin/usuarios/novo" element={<UserForm />} />

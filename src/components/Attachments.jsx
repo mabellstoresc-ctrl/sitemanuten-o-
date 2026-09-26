@@ -47,7 +47,7 @@ export function UploadButton({ entity, entityId, category, onUploaded, label = '
   );
 }
 
-export default function Attachments({ entity, entityId, canEdit }) {
+export default function Attachments({ entity, entityId, canEdit, title = 'Arquivos e documentos' }) {
   const { data, loading, error, reload } = useFetch(`/files${qs({ entity, entity_id: entityId })}`);
   const [category, setCategory] = useState('documento');
   const dialog = useDialog();
@@ -76,7 +76,7 @@ export default function Attachments({ entity, entityId, canEdit }) {
   return (
     <div className="card">
       <div className="card-head">
-        <h2>Arquivos e documentos</h2>
+        <h2>{title}</h2>
         {canEdit && (
           <div className="btn-row">
             <Select value={category} onChange={(v) => setCategory(v || 'documento')} options={FILE_CATEGORIES} allowEmpty={false} className="input" style={{ width: 150, height: 32 }} />

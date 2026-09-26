@@ -217,8 +217,9 @@ export function CoupleModal({ vehicle, onClose, onSaved }) {
   const save = async () => {
     setBusy(true);
     try {
-      await api(`/vehicles/${vehicle.id}/couple`, { method: 'POST', body: { trailer_id: trailerId } });
+      const r = await api(`/vehicles/${vehicle.id}/couple`, { method: 'POST', body: { trailer_id: trailerId } });
       toast('Implemento engatado.');
+      if (r.aet_warning) toast(`Atenção: ${r.aet_warning}`, 'error');
       onSaved();
     } catch (err) {
       toast(err.message, 'error');

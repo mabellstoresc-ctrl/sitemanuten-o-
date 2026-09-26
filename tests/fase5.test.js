@@ -323,3 +323,65 @@ test('backup completo só para o Administrador Principal, sem senhas', async () 
   assert.ok(!('password_hash' in b.dados.users[0]));
   assert.ok(!('sessions' in b.dados));
 });
+
+test('leitura de CRLV e AET a partir do texto do PDF (dados fictícios)', async () => {
+  const { parseDocument } = await import('../shared/docParse.js');
+  // Rótulo (fonte pequena) com o valor logo abaixo, como no CRLV digital
+  const L = (str, x, y) => ({ str, x, y, w: str.length * 3, h: 5.9, page: 1 });
+  const V = (str, x, y) => ({ str, x, y, w: str.length * 6, h: 10, page: 1 });
+  const items = [
+    L('CERTIFICADO DE REGISTRO E LICENCIAMENTO DE VEÍCULO - DIGITAL', 31, 773),
+    L('DETRAN-', 31, 784),
+    L('SC', 51, 784),
+    L('CÓDIGO RENAVAM', 31, 747),
+    V('12345678900', 31, 733),
+    L('PLACA', 31, 720),
+    L('EXERCÍCIO', 103, 720),
+    V('ABC1D23', 31, 707),
+    V('2026', 103, 707),
+    L('ANO FABRICAÇÃO', 31, 694),
+    L('ANO MODELO', 103, 694),
+    V('2018', 31, 681),
+    V('2019', 103, 681),
+    L('PESO BRUTO TOTAL', 510, 734),
+    V('2.8', 510, 721),
+    L('CMT', 453, 708),
+    V('60.0', 454, 694),
+    L('EIXOS', 504, 708),
+    V('3', 504, 694),
+    L('MARCA / MODELO / VERSÃO', 31, 564),
+    V('M.BENZ/AXOR 2544', 31, 541),
+    V('S', 133, 541),
+    L('ESPÉCIE / TIPO', 31, 529),
+    V('TRACAO CAMINHAO TRATOR', 31, 506),
+    L('CHASSI', 130, 494),
+    V('9BM958207AB123456', 131, 471),
+    L('COMBUSTÍVEL', 102, 458),
+    V('DIESEL', 103, 436),
+  ];
+  const c = parseDocument(items);
+  assert.equal(c.kind, 'crlv');
+  assert.equal(c.plate, 'ABC1D23');
+  assert.equal(c.exercise_year, 2026);
+  assert.equal(c.type, 'cavalo');
+  assert.equal(c.axle_config, '6x2');
+  assert.equal(c.brand, 'M.BENZ');
+  assert.equal(c.model, 'AXOR 2544 S', 'valor quebrado na mesma linha');
+  assert.equal(c.pbt, null, 'PBT implausível é descartado');
+  assert.equal(c.cmt, 60);
+  assert.equal(c.fuel_type, 'diesel_s10');
+  assert.equal(c.issuer, 'DETRAN-SC');
+
+  const t = (arr) => arr.map((str, i) => ({ str, x: 0, y: 800 - i * 10, h: 8, page: 1 }));
+  const dnit = parseDocument(t(['DEPARTAMENTO NACIONAL DE INFRA-ESTRUTURA DE TRANSPORTES - DNIT', 'AUTORIZAÇÃO ESPECIAL DE TRÂNSITO', 'A.E.T. Nº 111111/2026E', 'BITREM 6 EIXOS CTSS7+', 'PROPRIETÁRIO DO VEÍCULO', 'no período de:', '21/08/2026 a 20/08/2027', 'ABC1D23', 'XYZ1234', 'CONJUNTO TIPO: BITREM 6 EIXOS CTSS7+', 'PBTC INFORMADO (t): 43,6', 'Número da ART: 14392945/RS - RIV']));
+  assert.deepEqual(
+    { issuer: dnit.issuer, number: dnit.number, from: dnit.valid_from, to: dnit.expires_on, pbtc: dnit.pbtc, comb: dnit.combination, art: dnit.art, plates: dnit.plates },
+    { issuer: 'DNIT', number: '111111/2026E', from: '2026-08-21', to: '2027-08-20', pbtc: 43.6, comb: 'BITREM 6 EIXOS CTSS7+', art: '14392945/RS', plates: ['ABC1D23', 'XYZ1234'] },
+  );
+  const der = parseDocument(t(['SECRETARIA DE MEIO AMBIENTE, INFRAESTRUTURA E LOGÍSTICA', 'DEPARTAMENTO DE ESTRADAS DE RODAGEM', 'Nº', 'AET-12345678', 'Autorização Especial de Trânsito para circulação', 'PLACA:', 'ABC1D23', 'CONJUNTO:', 'SEMIREBOQUE /', 'SEMIREBOQUE', 'PESO', 'TOTAL BRUTO:', '47,00t', 'VALIDADE', '21/08/2026 a 21/08/2027']), 'X_DERSP_AET.pdf');
+  assert.equal(der.issuer, 'DER-SP');
+  assert.equal(der.number, 'AET-12345678');
+  assert.equal(der.pbtc, 47);
+  assert.equal(der.expires_on, '2027-08-21');
+  assert.equal(parseDocument(t(['Dados bancários'])), null);
+});

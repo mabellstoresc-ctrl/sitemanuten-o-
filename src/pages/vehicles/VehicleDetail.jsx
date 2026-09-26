@@ -5,12 +5,15 @@ import { useAuth } from '../../auth.jsx';
 import { api } from '../../api.js';
 import { useFetch, Loading, ErrorBox, StatusBadge, Tabs, Dl, DataTable, Empty, useToast, useDialog, Select } from '../../components/ui.jsx';
 import { PageHead } from '../../components/common.jsx';
-import Attachments, { UploadButton } from '../../components/Attachments.jsx';
+import { UploadButton } from '../../components/Attachments.jsx';
 import { AlertList } from '../Dashboard.jsx';
 import { VehicleFuelSummary, VehicleFuelTab } from '../fuel/VehicleFuel.jsx';
 import { VehicleMaintenanceSummary, VehicleMaintenanceTab } from '../maint/VehicleMaintenance.jsx';
 import TireMap from '../tires/TireMap.jsx';
 import { KmModal, StatusModal, DriverModal, CoupleModal } from './VehicleModals.jsx';
+import { DocumentsPanel } from '../docs/Documents.jsx';
+import { VehicleCostsTab } from '../costs/Costs.jsx';
+import { VehicleChecklistsTab } from '../checklists/Checklists.jsx';
 import { fmtKm, fmtDate, fmtDateTime, fmtNum, relative } from '../../lib/format.js';
 import { VEHICLE_TYPES, VEHICLE_STATUS, FUEL_TYPES, TOWED_TYPES, TRACTOR_TYPES, labelOf } from '../../../shared/constants.js';
 
@@ -48,6 +51,10 @@ const EVENT_TYPES = [
   { key: 'edicao', label: 'Edição' },
   { key: 'ocorrencia', label: 'Ocorrência' },
   { key: 'cadastro', label: 'Cadastro' },
+  { key: 'documento', label: 'Documento' },
+  { key: 'checklist', label: 'Checklist' },
+  { key: 'custo', label: 'Custo' },
+  { key: 'agenda', label: 'Agenda' },
 ];
 
 function HistoryTab({ id }) {
@@ -265,6 +272,11 @@ function Overview({ v, alerts, canEdit, openModal, reload }) {
               ['Combustível', labelOf(FUEL_TYPES, v.fuel_type)],
               !towed && ['Tanque', v.tank_capacity ? `${fmtNum(v.tank_capacity)} L` : null],
               ['Eixos', v.axle_config],
+              ['Cor', v.color],
+              ['Carroceria', v.body_type],
+              ['PBT', v.pbt ? `${fmtNum(v.pbt, 2)} t` : null],
+              !towed && ['CMT', v.cmt ? `${fmtNum(v.cmt, 2)} t` : null],
+              ['Capacidade de carga', v.capacity ? `${fmtNum(v.capacity, 2)} t` : null],
               ['Aquisição', fmtDate(v.acquisition_date)],
               ['Cadastrado em', fmtDateTime(v.created_at)],
             ]}
@@ -278,21 +290,7 @@ function Overview({ v, alerts, canEdit, openModal, reload }) {
         </div>
       </div>
 
-      {!towed && (
-        <div className="notice info" style={{ marginTop: 12 }}>
-          Custos consolidados do veículo aparecerão aqui na fase 5. Os pneus instalados estão na aba Pneus.
-        </div>
-      )}
     </>
-  );
-}
-
-function SoonTab({ phase, what }) {
-  return (
-    <div className="card soon-box">
-      <h2>Disponível na fase {phase}</h2>
-      <p>{what}</p>
-    </div>
   );
 }
 
@@ -351,7 +349,8 @@ export default function VehicleDetail() {
     !towed && { key: 'motoristas', label: 'Motoristas' },
     { key: 'engates', label: 'Engates' },
     { key: 'documentos', label: 'Documentos' },
-    { key: 'custos', label: 'Custos', soon: 5 },
+    can('checklists') && { key: 'checklists', label: 'Checklists' },
+    can('custos') && { key: 'custos', label: 'Custos' },
     !towed && { key: 'km', label: 'Quilometragem' },
     { key: 'historico', label: 'Histórico' },
   ].filter(Boolean);
@@ -445,10 +444,11 @@ export default function VehicleDetail() {
       {tab === 'abastecimentos' && <VehicleFuelTab vehicle={v} />}
       {tab === 'manutencoes' && <VehicleMaintenanceTab vehicle={v} />}
       {tab === 'pneus' && <TireMap vehicleId={v.id} />}
-      {tab === 'custos' && <SoonTab phase={5} what="Custos do mês, do ano, por KM e total do veículo, por categoria." />}
+      {tab === 'custos' && <VehicleCostsTab vehicle={v} />}
+      {tab === 'checklists' && <VehicleChecklistsTab vehicle={v} />}
       {tab === 'motoristas' && <DriversTab id={v.id} />}
       {tab === 'engates' && <CouplingsTab id={v.id} />}
-      {tab === 'documentos' && <Attachments entity="vehicle" entityId={v.id} canEdit={canEdit} />}
+      {tab === 'documentos' && <DocumentsPanel vehicleId={v.id} fileEntity="vehicle" canEditFiles={canEdit} />}
       {tab === 'km' && <KmTab id={v.id} key={v.current_km} />}
       {tab === 'historico' && <HistoryTab id={v.id} key={v.updated_at} />}
 

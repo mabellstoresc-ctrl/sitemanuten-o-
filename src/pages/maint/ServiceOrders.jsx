@@ -11,7 +11,7 @@ import { kmConfirmations } from './MaintenanceForm.jsx';
 import { fmtDate, fmtDateTime, fmtKm, fmtNum, fmtMoney, todayISO } from '../../lib/format.js';
 import { SERVICE_ORDER_STATUS, SERVICE_ORDER_OPEN, MAINTENANCE_TYPES, labelOf } from '../../../shared/constants.js';
 
-export function OrderModal({ order, presetVehicle, presetType, onClose, onSaved }) {
+export function OrderModal({ order, presetVehicle, presetType, presetProblem, checklistId, onClose, onSaved }) {
   const { user } = useAuth();
   const toast = useToast();
   const dialog = useDialog();
@@ -21,7 +21,7 @@ export function OrderModal({ order, presetVehicle, presetType, onClose, onSaved 
     type: order?.type || presetType || 'corretiva',
     opened_on: order?.opened_on || todayISO(),
     km: order?.km ?? null,
-    reported_problem: order?.reported_problem || '',
+    reported_problem: order?.reported_problem || presetProblem || '',
     responsible: order?.responsible || '',
     workshop: order?.workshop || '',
     due_date: order?.due_date || '',
@@ -36,7 +36,7 @@ export function OrderModal({ order, presetVehicle, presetType, onClose, onSaved 
     setBusy(true);
     setErrors({});
     try {
-      const body = { ...v, due_date: v.due_date || null, ...flags };
+      const body = { ...v, due_date: v.due_date || null, ...(checklistId && !order ? { checklist_id: checklistId } : {}), ...flags };
       const r = order ? await api(`/service-orders/${order.id}`, { method: 'PUT', body }) : await api('/service-orders', { method: 'POST', body });
       toast(order ? 'OS atualizada.' : `OS nº ${r.number} aberta.`);
       onSaved(order ? order.id : r.id);

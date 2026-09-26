@@ -120,6 +120,33 @@ export default function Dashboard() {
         </>
       )}
 
+      {(data.documentos || data.custos_mes || data.checklists) && (
+        <>
+          <div className="section-title">Documentos, checklists e custos</div>
+          <div className="kpis">
+            {data.documentos && (
+              <>
+                <Kpi label="Documentos vencidos" value={data.documentos.vencidos} tone={data.documentos.vencidos ? 'danger' : 'ok'} to="/documentos?situacao=vencidos" />
+                <Kpi label="Documentos vencendo" value={data.documentos.vencendo} tone={data.documentos.vencendo ? 'warn' : ''} to="/documentos?situacao=vencendo" />
+                {data.documentos.aet > 0 && <Kpi label="Engates fora da AET" value={data.documentos.aet} tone="warn" to="/alertas" />}
+              </>
+            )}
+            {data.checklists && (
+              <>
+                <Kpi label="Checklists hoje" value={data.checklists.hoje} to="/checklists" />
+                <Kpi label="Checklists com problema sem OS" value={data.checklists.pendentes} tone={data.checklists.pendentes ? 'warn' : ''} to="/checklists?resultado=pendentes" />
+              </>
+            )}
+            {data.custos_mes && (
+              <>
+                <Kpi label="Custo total da frota no mês" value={fmtMoney(data.custos_mes.total)} small to="/custos" />
+                <Kpi label="Custo por KM no mês" value={data.custos_mes.cost_per_km ? `R$ ${fmtNum(data.custos_mes.cost_per_km, 3)}` : '—'} small to="/custos" />
+              </>
+            )}
+          </div>
+        </>
+      )}
+
       <div className="section-title">Motoristas e alertas</div>
       <div className="kpis">
         {can('motoristas') && (
@@ -178,9 +205,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="notice info" style={{ marginTop: 12 }}>
-        Indicadores de documentos e custos consolidados entram neste painel na fase 5.
-      </div>
     </>
   );
 }

@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { FileUp } from 'lucide-react';
+import { readOfficialDocument } from '../../lib/pdfText.js';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useFetch, useForm, useToast, Field, Select, IntInput, DecimalInput, Loading, ErrorBox, enterNav } from '../../components/ui.jsx';
@@ -21,8 +23,15 @@ const EMPTY = {
   acquisition_date: '',
   status: 'disponivel',
   axle_config: '',
+  color: '',
+  body_type: '',
+  pbt: '',
+  cmt: '',
+  capacity: '',
   notes: '',
 };
+
+const DECIMALS = ['tank_capacity', 'pbt', 'cmt', 'capacity'];
 
 function Form({ initial, id }) {
   const navigate = useNavigate();
@@ -36,7 +45,8 @@ function Form({ initial, id }) {
   }, [towed]);
 
   const onSubmit = submit(async (vals) => {
-    const body = { ...vals, tank_capacity: vals.tank_capacity === '' ? null : vals.tank_capacity };
+    const body = { ...vals };
+    for (const k of DECIMALS) if (body[k] === '') body[k] = null;
     try {
       if (id) {
         delete body.current_km;
@@ -54,10 +64,55 @@ function Form({ initial, id }) {
     }
   });
 
+  // Preenche o cadastro lendo o CRLV digital (PDF)
+  const fileRef = useRef(null);
+  const [reading, setReading] = useState(false);
+  const fromCrlv = async (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    setReading(true);
+    try {
+      const d = await readOfficialDocument(file);
+      if (!d || d.kind !== 'crlv') throw new Error('Não reconheci este arquivo como CRLV digital. Use o PDF baixado do app/site do DETRAN (não escaneado).');
+      const dec = (n) => (n === null || n === undefined ? '' : String(n).replace('.', ','));
+      setValues((s) => ({
+        ...s,
+        ...(id ? {} : { plate: d.plate || s.plate, type: d.type || s.type }),
+        brand: d.brand || s.brand,
+        model: d.model || s.model,
+        year_manufacture: d.year_manufacture || s.year_manufacture,
+        year_model: d.year_model || s.year_model,
+        chassis: d.chassis || s.chassis,
+        renavam: d.renavam || s.renavam,
+        fuel_type: d.fuel_type || s.fuel_type,
+        axle_config: d.axle_config || s.axle_config,
+        color: d.color || s.color,
+        body_type: d.body_type || s.body_type,
+        pbt: d.pbt ? dec(d.pbt) : s.pbt,
+        cmt: d.cmt ? dec(d.cmt) : s.cmt,
+        capacity: d.capacity ? dec(d.capacity) : s.capacity,
+      }));
+      if (id && d.plate && d.plate !== initial.plate) toast(`Atenção: o CRLV é da placa ${d.plate}, diferente deste veículo.`, 'error');
+      else toast('Dados do CRLV preenchidos. Confira antes de salvar.');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setReading(false);
+    }
+  };
+
   const E = errors;
   return (
     <form onSubmit={onSubmit} onKeyDown={enterNav} className="card">
       <div className="card-body">
+        <div className="notice info" style={{ marginBottom: 12, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ flex: 1, minWidth: 200 }}>Tem o CRLV digital em PDF? O sistema lê e preenche placa, RENAVAM, chassi, ano, modelo, eixos, PBT e CMT.</span>
+          <input ref={fileRef} type="file" accept="application/pdf" hidden onChange={fromCrlv} />
+          <button type="button" className="btn sm" onClick={() => fileRef.current?.click()} disabled={reading}>
+            <FileUp size={14} /> {reading ? 'Lendo…' : 'Preencher pelo CRLV (PDF)'}
+          </button>
+        </div>
         <div className="form-grid">
           <Field label="Placa" required error={E.plate} hint="ABC1234 ou ABC1D23">
             <input value={v.plate} onChange={(e) => set('plate')(e.target.value.toUpperCase())} maxLength={8} autoFocus={!id} className="plate" />
@@ -115,6 +170,23 @@ function Form({ initial, id }) {
           <Field label="Configuração de eixos" error={E.axle_config} hint="Define o mapa de pneus">
             <Select value={v.axle_config} onChange={set('axle_config')} options={AXLE_LAYOUTS} placeholder="Padrão pelo tipo" />
           </Field>
+          <Field label="Cor" error={E.color}>
+            <input value={v.color || ''} onChange={(e) => set('color')(e.target.value.toUpperCase())} maxLength={30} />
+          </Field>
+          <Field label="Carroceria" error={E.body_type}>
+            <input value={v.body_type || ''} onChange={(e) => set('body_type')(e.target.value.toUpperCase())} maxLength={60} placeholder="Ex.: FECHADA" />
+          </Field>
+          <Field label="PBT (t)" error={E.pbt} hint="Peso bruto total">
+            <DecimalInput value={v.pbt} onChange={set('pbt')} />
+          </Field>
+          {!towed && (
+            <Field label="CMT (t)" error={E.cmt} hint="Capacidade máxima de tração">
+              <DecimalInput value={v.cmt} onChange={set('cmt')} />
+            </Field>
+          )}
+          <Field label="Capacidade de carga (t)" error={E.capacity}>
+            <DecimalInput value={v.capacity} onChange={set('capacity')} />
+          </Field>
           <Field label="Observações" className="full" error={E.notes}>
             <textarea value={v.notes || ''} onChange={set('notes')} rows={3} maxLength={4000} />
           </Field>
@@ -141,7 +213,7 @@ export default function VehicleForm() {
   if (id && loading) return <Loading />;
   if (id && error) return <ErrorBox error={error} onRetry={reload} />;
   const initial = id ? { ...EMPTY, ...Object.fromEntries(Object.entries(data.vehicle).map(([k, val]) => [k, val ?? (typeof EMPTY[k] === 'string' ? '' : val)])) } : { ...EMPTY, type: params.get('tipo') || '' };
-  if (initial.tank_capacity !== '' && initial.tank_capacity !== null) initial.tank_capacity = String(initial.tank_capacity).replace('.', ',');
+  for (const k of DECIMALS) initial[k] = initial[k] === '' || initial[k] === null || initial[k] === undefined ? '' : String(initial[k]).replace('.', ',');
   return (
     <Guard module="veiculos" action={id ? 'editar' : 'cadastrar'}>
       <PageHead title={id ? `Editar veículo ${data.vehicle.plate}` : 'Novo veículo'} code={id ? null : '102'} back={id ? `/veiculos/${id}` : '/veiculos'} />
